@@ -1,0 +1,211 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style type="text/css">
+
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+#canvas {
+	width: 100%;
+	height: auto;
+
+
+}
+
+
+</style>
+
+
+</head>
+
+<body>
+<canvas id="canvas" width="320" height="240"></canvas>
+	
+</body>
+<script type="text/javascript">
+
+var input = {
+		w: false,
+		s: false,
+		a: false,
+		d: false
+}
+
+
+var width = 320;
+var height = 240;
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var Scene = new Scene();
+var startTime = new Date();
+var endTime = new Date();
+
+document.addEventListener('keydown',doKeyDown,false);
+document.addEventListener('keyup',doKeyRelease,false);
+
+
+requestAnimationFrame(mainLoop);
+
+
+
+//X & Y coordinates
+function Vector2() {
+	this.x = 0.0;
+	this.y = 0.0;
+}
+
+function Transform() {
+	this.position = new Vector2();
+	this.rotation = new Vector2();
+	this.scale = new Vector2();
+}
+
+
+//These objects will be used later on.
+function GameObject() {
+	this.transform = new Transform();
+
+	this.Update = function(scene) {
+
+
+
+	}
+
+	this.Draw = function(scene) {
+
+
+	}
+
+}
+
+
+function Player() {
+	this.transform = new Transform();
+	this.speed = 0.25;
+
+	this.Update = function(scene) {
+
+		if(input.w) {
+			this.transform.position.y -= (scene.deltaTime * this.speed);
+
+		}
+
+		if(input.s) {
+			this.transform.position.y += (scene.deltaTime * this.speed);
+
+		}
+
+		if(input.a) {
+			this.transform.position.x -= (scene.deltaTime * this.speed);
+
+		}
+
+		if(input.d) {
+			this.transform.position.x += (scene.deltaTime * this.speed);
+
+		}
+
+
+
+	}
+
+	this.Draw = function(scene) {
+
+		 ctx.fillRect(this.transform.position.x,this.transform.position.y,16,16);
+
+
+	}
+
+}
+
+
+
+
+function Scene() {
+	this.GameObjects = [];
+	this.deltaTime = 0.0;
+
+	this.Update = function() {
+
+		for(var i = 0; i < this.GameObjects.length; i++) {
+			this.GameObjects[i].Update(this);
+
+		}
+
+		
+
+		this.deltaTime = new Date() - startTime;
+		startTime = new Date();
+	}
+
+	this.Draw = function() {
+		ctx.clearRect(0, 0, width, height);
+
+
+		for(var i = 0; i < this.GameObjects.length; i++) {
+			this.GameObjects[i].Draw(this);
+		}
+
+	}
+
+
+	this.GameObjects.push(new Player());
+
+
+}
+
+
+function mainLoop() {
+
+	Scene.Update();
+	Scene.Draw();
+
+
+	requestAnimationFrame(mainLoop);
+
+}
+
+
+function doKeyDown(e) {
+
+			var code = e.keyCode;
+
+			if (code == 87) { // w
+				input.w = true;
+			} else if(code == 83) { // s
+				input.s = true;
+			} else if(code == 65) { // a
+				input.a = true;
+			} else if(code == 68) { // d
+				input.d = true;
+			}
+	}
+
+	function doKeyRelease(e) {
+
+		var code = e.keyCode;
+
+			if (code == 87) { // w
+				input.w = false;
+			} else if(code == 83) { // s
+				input.s = false;
+			} else if(code == 65) { // a
+				input.a = false;
+			} else if(code == 68) { // d
+				input.d = false;
+			}
+
+
+
+	}
+
+
+
+</script>
+
+
+</html>
