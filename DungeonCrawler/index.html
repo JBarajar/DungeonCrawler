@@ -50,6 +50,14 @@ document.addEventListener('keyup',doKeyRelease,false);
 
 requestAnimationFrame(mainLoop);
 
+var tileArray = new Array();
+
+tileArray = 
+[[0,0,0,0,0]
+,[0,0,1,0,0]
+,[0,1,1,1,0]
+,[0,1,1,1,0]
+,[0,0,1,0,0]];
 
 
 //X & Y coordinates
@@ -85,7 +93,7 @@ function GameObject() {
 
 function Player() {
 	this.transform = new Transform();
-	this.speed = 0.25;
+	this.speed = 0.1;
 
 	this.Update = function(scene) {
 
@@ -123,6 +131,39 @@ function Player() {
 }
 
 
+function TileRenderer() {
+	this.transform = new Transform();
+
+	this.Update = function(scene) {
+
+
+
+	}
+
+	this.Draw = function(scene) {
+
+		for(var i = 0; i < 5; i++) {
+
+			for(var j = 0; j < 5; j++) {
+
+				if(tileArray[j][i] == 1) {
+					ctx.strokeRect(i*16,j*16,16,16);
+
+
+				}
+
+			}
+
+		}
+
+
+	}
+
+
+
+}
+
+
 
 
 function Scene() {
@@ -154,6 +195,7 @@ function Scene() {
 
 
 	this.GameObjects.push(new Player());
+	this.GameObjects.push(new TileRenderer());
 
 
 }
