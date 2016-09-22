@@ -48,17 +48,9 @@ document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
 
 
+Scene.Start();
+
 requestAnimationFrame(mainLoop);
-
-var tileArray = new Array();
-
-tileArray = 
-[[0,0,1,0,0]
-,[0,0,1,0,0]
-,[0,1,1,1,0]
-,[0,1,1,1,0]
-,[0,0,1,0,0]];
-
 
 //X & Y coordinates
 function Vector2() {
@@ -77,6 +69,11 @@ function Transform() {
 function GameObject() {
 	this.transform = new Transform();
 
+	this.Start = function(scene) {
+
+		
+	}
+
 	this.Update = function(scene) {
 
 
@@ -93,31 +90,81 @@ function GameObject() {
 
 function Player() {
 	this.transform = new Transform();
+	this.transform.position.x = 64;
+	this.transform.position.y = 64;
+
 	this.speed = 0.1;
+
+	this.Start = function(scene) {
+
+		
+	}
 
 	this.Update = function(scene) {
 
+		console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
+		console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
+
 		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
 
-		if(input.w) {
-			this.transform.position.y -= (scene.deltaTime * this.speed);
+		//Store previous values of X and Y (for collisions)
+		var prevX = this.transform.position.x;
+		var prevY = this.transform.position.y;
+
+		if(input.w || input.s) {
+			if(input.w) {
+				this.transform.position.y -= (scene.deltaTime * this.speed);
+
+			}
+
+			if(input.s) {
+				this.transform.position.y += (scene.deltaTime * this.speed);
+
+			}
+
+			// Check collisions based on current tile (Scene.tiles[y][x])
+			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+				this.transform.position.y = prevY;
+
+				}
+
+			}
+
+
 
 		}
 
-		if(input.s) {
-			this.transform.position.y += (scene.deltaTime * this.speed);
+
+		
+
+		if(input.a || input.d) {
+			if(input.a) {
+				this.transform.position.x -= (scene.deltaTime * this.speed);
+
+			}
+
+			if(input.d) {
+				this.transform.position.x += (scene.deltaTime * this.speed);
+
+			}
+
+			// Check collisions based on current tile (Scene.tiles[y][x])
+			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+				this.transform.position.x = prevX;
+
+				}
+
+			}
+
 
 		}
 
-		if(input.a) {
-			this.transform.position.x -= (scene.deltaTime * this.speed);
+		
 
-		}
+		
 
-		if(input.d) {
-			this.transform.position.x += (scene.deltaTime * this.speed);
-
-		}
 
 
 
@@ -136,6 +183,28 @@ function Player() {
 function TileRenderer() {
 	this.transform = new Transform();
 
+	this.Start = function(scene) {
+
+		for(var i = 0; i < scene.tiles.length; i++) {
+
+			for(var j = 0; j < scene.tiles[i].length; j++) {
+
+				if(scene.tiles[j][i] == 1) {
+					scene.tileContext.strokeRect(i*16,j*16,16,16);
+				}
+
+				if(scene.tiles[j][i] == 2) {
+					scene.tileContext.fillRect(i*16,j*16,16,16);
+
+				}
+
+			}
+
+		}
+
+
+	}
+
 	this.Update = function(scene) {
 
 
@@ -143,20 +212,8 @@ function TileRenderer() {
 	}
 
 	this.Draw = function(scene) {
-
-		for(var i = 0; i < 5; i++) {
-
-			for(var j = 0; j < 5; j++) {
-
-				if(tileArray[j][i] == 1) {
-					ctx.strokeRect(i*16 - scene.Camera.transform.position.x + scene.Camera.offset.x,j*16 - scene.Camera.transform.position.y + scene.Camera.offset.y,16,16);
-
-
-				}
-
-			}
-
-		}
+		ctx.drawImage(scene.tileBuffer, -scene.Camera.transform.position.x + scene.Camera.offset.x,-scene.Camera.transform.position.y + scene.Camera.offset.y);
+		
 
 
 	}
@@ -175,7 +232,10 @@ function Camera() {
 	this.offset.x = 320/2;
 	this.offset.y = 240/2;
 
+	this.Start = function(scene) {
 
+		
+	}
 
 
 	this.Update = function(scene) {
@@ -200,6 +260,36 @@ function Scene() {
 	this.GameObjects = [];
 	this.deltaTime = 0.0;
 	this.Camera = new Camera();
+
+	this.tiles = [[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]];
+
+	this.tileBuffer = document.createElement('canvas');
+	this.tileBuffer.width = 256;
+	this.tileBuffer.height = 256;
+	this.tileContext = this.tileBuffer.getContext('2d');
+
+	this.Start = function() {
+		for(var i = 0; i < this.GameObjects.length; i++) {
+			this.GameObjects[i].Start(this);
+
+		}
+
+	}
 
 	this.Update = function() {
 
