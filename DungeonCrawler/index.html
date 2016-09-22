@@ -97,6 +97,8 @@ function Player() {
 
 	this.Update = function(scene) {
 
+		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
+
 		if(input.w) {
 			this.transform.position.y -= (scene.deltaTime * this.speed);
 
@@ -123,7 +125,7 @@ function Player() {
 
 	this.Draw = function(scene) {
 
-		 ctx.fillRect(this.transform.position.x,this.transform.position.y,16,16);
+		 ctx.fillRect(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (16/2),this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (16/2),16,16);
 
 
 	}
@@ -147,7 +149,7 @@ function TileRenderer() {
 			for(var j = 0; j < 5; j++) {
 
 				if(tileArray[j][i] == 1) {
-					ctx.strokeRect(i*16,j*16,16,16);
+					ctx.strokeRect(i*16 - scene.Camera.transform.position.x + scene.Camera.offset.x,j*16 - scene.Camera.transform.position.y + scene.Camera.offset.y,16,16);
 
 
 				}
@@ -165,12 +167,43 @@ function TileRenderer() {
 
 
 
+function Camera() {
+	this.transform = new Transform();
+
+	this.offset = new Vector2();
+
+	this.offset.x = 320/2;
+	this.offset.y = 240/2;
+
+
+
+
+	this.Update = function(scene) {
+
+
+	}
+
+	this.Draw = function(scene) {
+
+
+
+	}
+
+
+
+}
+
+
+
 
 function Scene() {
 	this.GameObjects = [];
 	this.deltaTime = 0.0;
+	this.Camera = new Camera();
 
 	this.Update = function() {
+
+		this.Camera.Update(this);
 
 		for(var i = 0; i < this.GameObjects.length; i++) {
 			this.GameObjects[i].Update(this);
@@ -242,6 +275,23 @@ function doKeyDown(e) {
 			}
 
 
+
+	}
+
+	//a and b are Vector2 objects
+	function lerp(a,b,t) {
+
+		//x axis
+		var x = a.x + t * (b.x - a.x)
+
+		//y axis
+		var y = a.y + t * (b.y - a.y)
+
+		var ret = new Vector2();
+		ret.x = x;
+		ret.y = y;
+
+		return ret;
 
 	}
 
