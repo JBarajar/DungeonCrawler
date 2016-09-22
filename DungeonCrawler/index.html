@@ -102,8 +102,8 @@ function Player() {
 
 	this.Update = function(scene) {
 
-		console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
-		console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
+		//console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
+		//console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
 
 		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
 
