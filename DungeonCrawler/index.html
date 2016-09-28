@@ -137,17 +137,67 @@ function BoxCollider(width, height) {
 
 
 
-					/*
+					
 					
 					//Top left
 					if (position.x - this.width < scene.GameObjects[i].transform.position.x + scene.GameObjects[i].boxCollider.width &&
 					   position.x - this.width > scene.GameObjects[i].transform.position.x &&
 					   position.y - this.height < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
 					   position.y - this.height > scene.GameObjects[i].transform.position.y) {
+
+						if(scene.GameObjects[i].onCollide) {
+							scene.GameObjects[i].onCollide();
+
+						}
+
 					    return true;
 					}
 
-					*/
+					//Top right
+					if (position.x + this.width < scene.GameObjects[i].transform.position.x + scene.GameObjects[i].boxCollider.width &&
+					   position.x + this.width > scene.GameObjects[i].transform.position.x &&
+					   position.y - this.height < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
+					   position.y - this.height > scene.GameObjects[i].transform.position.y) {
+
+						if(scene.GameObjects[i].onCollide) {
+							scene.GameObjects[i].onCollide();
+
+						}
+
+					    return true;
+					}
+
+					//Bottom Right
+					if (position.x + this.width < scene.GameObjects[i].transform.position.x + scene.GameObjects[i].boxCollider.width &&
+					   position.x + this.width > scene.GameObjects[i].transform.position.x &&
+					   position.y + this.height < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
+					   position.y + this.height > scene.GameObjects[i].transform.position.y) {
+
+						if(scene.GameObjects[i].onCollide) {
+							scene.GameObjects[i].onCollide();
+
+						}
+
+					    return true;
+					}
+
+					//Bottom left
+					if (position.x - this.width < scene.GameObjects[i].transform.position.x + scene.GameObjects[i].boxCollider.width &&
+					   position.x - this.width > scene.GameObjects[i].transform.position.x &&
+					   position.y + this.height < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
+					   position.y + this.height > scene.GameObjects[i].transform.position.y) {
+
+						if(scene.GameObjects[i].onCollide) {
+							scene.GameObjects[i].onCollide();
+
+						}
+
+					    return true;
+					}
+
+					
+
+					
 
 				}
 
@@ -191,10 +241,17 @@ function GameObject() {
 
 function Chest(x, y) {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(8, 8);
+	this.boxCollider = new BoxCollider(16, 16);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
 	this.img = document.getElementById("chest");
+
+	this.isOpen = 0;
+
+	this.onCollide = function() {
+		this.isOpen = 1;
+
+	}
 
 	this.Start = function(scene) {
 
@@ -214,7 +271,7 @@ function Chest(x, y) {
 		*/
 
 
-		ctx.drawImage(this.img, 0, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (16/2)),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (16/2)), 16, 16);
+		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 
 
 	}
@@ -489,7 +546,15 @@ function Scene() {
 
 	this.GameObjects.push(new TileRenderer());
 	this.GameObjects.push(new Player());
+
 	this.GameObjects.push(new Chest(10,10));
+	this.GameObjects.push(new Chest(11,10));
+	this.GameObjects.push(new Chest(12,10));
+	this.GameObjects.push(new Chest(13,10));
+	this.GameObjects.push(new Chest(14,10));
+	this.GameObjects.push(new Chest(15,10));
+	this.GameObjects.push(new Chest(16,10));
+	this.GameObjects.push(new Chest(17,10));
 
 
 }
