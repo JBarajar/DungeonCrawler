@@ -61,6 +61,8 @@ var endTime = new Date();
 document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
 
+var player;
+
 
 Scene.Start();
 
@@ -87,6 +89,8 @@ function BoxCollider(width, height) {
 	this.height = height;
 
 	this.checkCollision = function(scene, position) {
+
+
 
 		//Top left
 		if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x - this.width)/16)]) {
@@ -239,12 +243,103 @@ function GameObject() {
 
 }
 
+function Key() {
+	this.type = "Key";
+
+}
+
+
+function Enemy(x, y) {
+	this.type = "Enemy";
+	this.transform = new Transform();
+	this.boxCollider = new BoxCollider(16, 16);
+	this.transform.position.x = x*16;
+	this.transform.position.y = y*16;
+	this.speed = 0.05;
+	//this.img = document.getElementById("chest");
+
+
+
+
+	this.onCollide = function() {
+		
+
+	}
+
+	this.Start = function(scene) {
+
+
+	}
+
+	this.Update = function(scene) {
+
+
+		//Store previous values of X and Y (for collisions)
+		var prevX = this.transform.position.x;
+		var prevY = this.transform.position.y;
+
+
+		
+		this.transform.position.y = lerp2(this.transform.position.y, player.transform.position.y, scene.deltaTime*0.0005);
+
+
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+			this.transform.position.y = prevY;
+
+		};
+
+
+		
+
+
+		
+		this.transform.position.x = lerp2(this.transform.position.x, player.transform.position.x, scene.deltaTime*0.0005);
+
+
+		
+
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+			this.transform.position.x = prevX;
+
+		};
+		
+			
+
+	
+
+
+	}
+
+	this.Draw = function(scene) {
+
+
+		/*
+		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (16/2)),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (16/2)),16,16);
+		*/
+
+		/*
+		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		*/
+
+		ctx.fillStyle = "green";
+
+		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+
+
+	}
+
+
+}
+
 function Chest(x, y) {
+	this.type = "Chest";
 	this.transform = new Transform();
 	this.boxCollider = new BoxCollider(16, 16);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
 	this.img = document.getElementById("chest");
+
+	this.Inventory = [];
 
 	this.isOpen = 0;
 
@@ -279,14 +374,26 @@ function Chest(x, y) {
 
 }
 
+function Door(x, y) {
+	this.type = "Door";
+
+}
+
 
 function Player() {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(8, 8);
+	this.boxCollider = new BoxCollider(16, 16);
 	this.transform.position.x = 64;
 	this.transform.position.y = 64;
 
 	this.speed = 0.1;
+
+	this.health = 100;
+
+	this.onCollide = function(scene) {
+
+
+	}
 
 	this.Start = function(scene) {
 
@@ -382,7 +489,12 @@ function Player() {
 
 	this.Draw = function(scene) {
 
+		 ctx.fillStyle = "#000000";
+
 		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (16/2)),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (16/2)),16,16);
+
+
+		 //ctx.fillStyle = "red";
 
 
 	}
@@ -535,7 +647,8 @@ function Scene() {
 	}
 
 	this.Draw = function() {
-		ctx.clearRect(0, 0, width, height);
+		ctx.fillStyle = "#BBBBBB";
+		ctx.fillRect(0, 0, width, height);
 
 
 		for(var i = 0; i < this.GameObjects.length; i++) {
@@ -545,16 +658,13 @@ function Scene() {
 	}
 
 	this.GameObjects.push(new TileRenderer());
-	this.GameObjects.push(new Player());
+	player = new Player();
+	this.GameObjects.push(player);
 
 	this.GameObjects.push(new Chest(10,10));
 	this.GameObjects.push(new Chest(12,10));
-	this.GameObjects.push(new Chest(14,10));
-	this.GameObjects.push(new Chest(16,10));
-	this.GameObjects.push(new Chest(10,14));
-	this.GameObjects.push(new Chest(12,14));
-	this.GameObjects.push(new Chest(14,14));
-	this.GameObjects.push(new Chest(16,14));
+	this.GameObjects.push(new Enemy(20,10));
+
 
 
 }
@@ -604,14 +714,23 @@ function doKeyDown(e) {
 
 	}
 
+
+	function lerp2(a,b,t) {
+
+		//x axis
+		var x = a + t * (b - a);
+
+		return x;
+	}
+
 	//a and b are Vector2 objects
 	function lerp(a,b,t) {
 
 		//x axis
-		var x = a.x + t * (b.x - a.x)
+		var x = a.x + t * (b.x - a.x);
 
 		//y axis
-		var y = a.y + t * (b.y - a.y)
+		var y = a.y + t * (b.y - a.y);
 
 		var ret = new Vector2();
 		ret.x = x;
