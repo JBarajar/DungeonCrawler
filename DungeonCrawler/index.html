@@ -607,6 +607,7 @@ function Scene() {
 
 		}
 
+		var list = createPath(enemy, player, this);
 	}
 
 	this.Update = function() {
@@ -641,8 +642,9 @@ function Scene() {
 
 	this.GameObjects.push(new Chest(10,10));
 	this.GameObjects.push(new Chest(12,10));
-	this.GameObjects.push(new Enemy(20,10));
-	this.GameObjects.push(new Enemy(10,5));
+	enemy = new Enemy(9,4);
+	this.GameObjects.push(enemy);
+
 
 
 
@@ -657,6 +659,96 @@ function mainLoop() {
 
 	requestAnimationFrame(mainLoop);
 
+}
+
+function Tile(x, y, cost) {
+	this.getTile = function(n) {
+		return Math.floor(n/16);
+	}
+	this.getCost = function(start, end) {
+		return Math.abs(this.tile.x - start.tile.x) + Math.abs(this.tile.y - start.tile.y) + Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y);
+	}
+
+	this.tile = new Vector2();
+	this.tile.x = this.getTile(x);
+	this.tile.y = this.getTile(y);
+	this.cost = cost;
+}
+
+function inList(t, cl) {
+    for(var i = 0; i < cl.length; i++) {
+        if(t.tile.x == cl[i].tile.x && t.tile.y == cl[i].tile.y) return true;
+    }
+    return false;
+}
+
+function createPath(a , b, scene) {
+	var map = new Array();
+	map = scene.tiles;
+	var openList = new Array();
+	var closedList = new Array();
+	var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
+	var curr = start;
+	var target = new Tile(b.transform.position.x, b.transform.position.y);
+	var tempTile = new Tile(0,0,0);
+
+	do {
+	//for(var ind = 0; ind < 7; ind++) {
+		closedList.push(curr);
+		//left tile
+		if(map[curr.tile.y][curr.tile.x-1] == 1) {
+			tempTile = new Tile(0,0,0);
+			tempTile.tile.x = curr.tile.x - 1;
+			tempTile.tile.y = curr.tile.y;
+			tempTile.cost = tempTile.getCost(start,target);
+			console.log("temptile");
+			console.log(tempTile);
+			if(!inList(tempTile, closedList)) {console.log("pushing left tile"); openList.push(tempTile);}
+		}
+		//right tile
+		if(map[curr.tile.y][curr.tile.x+1] == 1) {
+			tempTile = new Tile(0,0,0);
+			tempTile.tile.x = curr.tile.x + 1;
+			tempTile.tile.y = curr.tile.y;
+			tempTile.cost = tempTile.getCost(start,target);
+			if(!inList(tempTile, closedList)) {console.log("pushing right tile"); openList.push(tempTile);}
+		}
+		//top tile
+		if(map[curr.tile.y-1][curr.tile.x] == 1) {
+			tempTile = new Tile(0,0,0);
+			tempTile.tile.x = curr.tile.x;
+			tempTile.tile.y = curr.tile.y - 1;
+			tempTile.cost = tempTile.getCost(start,target);
+			if(!inList(tempTile, closedList)) {console.log("pushing top tile"); openList.push(tempTile);}
+		}
+		//bottom tile
+		if(map[curr.tile.y+1][curr.tile.x] == 1) {
+			tempTile = new Tile(0,0,0);
+			tempTile.tile.x = curr.tile.x;
+			tempTile.tile.y = curr.tile.y + 1;
+			tempTile.cost = tempTile.getCost(start,target);
+			if(!inList(tempTile, closedList)) {console.log("pushing bot tile"); openList.push(tempTile);}
+		}
+
+		tempTile = new Tile(0,0,0);
+		var index = openList.length-1;
+		tempTile = openList[index];
+		for(var i = openList.length-1; i >= 0; i--) {
+			if(tempTile.cost > openList[i].cost) {
+				tempTile = openList[i];
+				index = i;
+				console.log("tempTile changed");
+			}
+		}
+		console.log(index);
+		openList.splice(index, 1);
+		curr = new Tile(0,0,0);
+		curr = tempTile;
+		console.log(curr);
+	} while(closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y);
+
+	console.log(openList);
+	console.log(closedList);
 }
 
 
