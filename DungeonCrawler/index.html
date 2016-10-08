@@ -99,6 +99,20 @@ function BoxCollider(width, height) {
 				}
 		}
 
+		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x)/16)]) {
+				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x)/16)] == 2) {
+					return true;
+
+				}
+		}
+
+		if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x + this.width)/16)]) {
+				if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x + this.width)/16)] == 2) {
+					return true;
+
+				}
+		}
+
 		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)]) {
 				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)] == 2) {
 					return true;
