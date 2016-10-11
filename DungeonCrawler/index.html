@@ -239,14 +239,33 @@ function Key() {
 function Enemy(x, y) {
 	this.type = "Enemy";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16);
+	this.boxCollider = new BoxCollider(15, 15);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = getRandomArbitrary(0.0001, 0.0007);
+	this.speed = 0.1; //getRandomArbitrary(0.0001, 0.0007);
 	//this.img = document.getElementById("chest");
+	this.path;
+	var n = 0;
+	this.playerPos = new Vector2();
+	this.playerPos.x = player.transform.position.x;
+	this.playerPos.y = player.transform.position.y;
 
+	this.Move = function(target,scene) {
+		var prevX = this.transform.position.x;
+		var prevY = this.transform.position.y;
 
+		if(this.transform.position.x - target.tile.x*16 < 1 && this.transform.position.y - target.tile.y*16 < 1 && n < this.path.length-1) n++;
+		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+			this.transform.position.x = prevX;
 
+		}
+		this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed)
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+			this.transform.position.y = prevY;
+
+		}
+	}
 
 	this.onCollide = function() {
 		
@@ -254,41 +273,42 @@ function Enemy(x, y) {
 	}
 
 	this.Start = function(scene) {
-
+		this.path = createPath(this,player,scene);
+		console.log(this.path);
 
 	}
 
 	this.Update = function(scene) {
+		if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
+			this.playerPos.x = player.transform.position.x;
+			this.playerPos.y = player.transform.position.y;
+			n=1;
+			this.path = createPath(this,player,scene);
+		}
 
+			
 
 		//Store previous values of X and Y (for collisions)
-		var prevX = this.transform.position.x;
-		var prevY = this.transform.position.y;
+		
 
+
+		this.Move(this.path[n],scene);
+		//this.transform.position.y = lerp2(this.transform.position.y, player.transform.position.y, scene.deltaTime*this.speed);
 
 		
-		this.transform.position.y = lerp2(this.transform.position.y, player.transform.position.y, scene.deltaTime*this.speed);
-
 		
-		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-			this.transform.position.y = prevY;
-
-		}
 
 
 		
 
 
 		
-		this.transform.position.x = lerp2(this.transform.position.x, player.transform.position.x, scene.deltaTime*this.speed);
+		//this.transform.position.x = lerp2(this.transform.position.x, player.transform.position.x, scene.deltaTime*this.speed);
 
 
 		
 		
-		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-			this.transform.position.x = prevX;
-
-		}
+		
 		
 			
 
@@ -369,7 +389,7 @@ function Door(x, y) {
 
 function Player() {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16);
+	this.boxCollider = new BoxCollider(15, 15);
 	this.transform.position.x = 64;
 	this.transform.position.y = 64;
 
@@ -621,7 +641,6 @@ function Scene() {
 
 		}
 
-		var list = createPath(enemy, player, this);
 	}
 
 	this.Update = function() {
@@ -658,6 +677,8 @@ function Scene() {
 	this.GameObjects.push(new Chest(12,10));
 	enemy = new Enemy(9,4);
 	this.GameObjects.push(enemy);
+	
+	
 
 
 
@@ -679,8 +700,8 @@ function Tile(x, y, cost) {
 	this.getTile = function(n) {
 		return Math.floor(n/16);
 	}
-	this.getCost = function(start, end) {
-		return Math.abs(this.tile.x - start.tile.x) + Math.abs(this.tile.y - start.tile.y) + Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y);
+	this.getCost = function(s, end) {
+		return Math.abs(this.tile.x - s.tile.x) + Math.abs(this.tile.y - s.tile.y) + 10*(Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y));
 	}
 
 	this.tile = new Vector2();
@@ -703,47 +724,30 @@ function createPath(a , b, scene) {
 	var closedList = new Array();
 	var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
 	var curr = start;
+
 	var target = new Tile(b.transform.position.x, b.transform.position.y);
 	var tempTile = new Tile(0,0,0);
+	this.addAdjTile = function(x,y) {
+		if(map[y][x] == 1) {
+			tempTile = new Tile(0,0,0);
+			tempTile.tile.x = x;
+			tempTile.tile.y = y;
+			tempTile.cost = tempTile.getCost(start,target);
+			if(!inList(tempTile, closedList)) openList.push(tempTile);
+		}
+	}
 
 	do {
 	//for(var ind = 0; ind < 7; ind++) {
 		closedList.push(curr);
 		//left tile
-		if(map[curr.tile.y][curr.tile.x-1] == 1) {
-			tempTile = new Tile(0,0,0);
-			tempTile.tile.x = curr.tile.x - 1;
-			tempTile.tile.y = curr.tile.y;
-			tempTile.cost = tempTile.getCost(start,target);
-			console.log("temptile");
-			console.log(tempTile);
-			if(!inList(tempTile, closedList)) {console.log("pushing left tile"); openList.push(tempTile);}
-		}
+		this.addAdjTile(curr.tile.x-1,curr.tile.y);
 		//right tile
-		if(map[curr.tile.y][curr.tile.x+1] == 1) {
-			tempTile = new Tile(0,0,0);
-			tempTile.tile.x = curr.tile.x + 1;
-			tempTile.tile.y = curr.tile.y;
-			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList)) {console.log("pushing right tile"); openList.push(tempTile);}
-		}
+		this.addAdjTile(curr.tile.x+1,curr.tile.y);
 		//top tile
-		if(map[curr.tile.y-1][curr.tile.x] == 1) {
-			tempTile = new Tile(0,0,0);
-			tempTile.tile.x = curr.tile.x;
-			tempTile.tile.y = curr.tile.y - 1;
-			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList)) {console.log("pushing top tile"); openList.push(tempTile);}
-		}
+		this.addAdjTile(curr.tile.x,curr.tile.y-1);
 		//bottom tile
-		if(map[curr.tile.y+1][curr.tile.x] == 1) {
-			tempTile = new Tile(0,0,0);
-			tempTile.tile.x = curr.tile.x;
-			tempTile.tile.y = curr.tile.y + 1;
-			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList)) {console.log("pushing bot tile"); openList.push(tempTile);}
-		}
-
+		this.addAdjTile(curr.tile.x,curr.tile.y+1);
 		tempTile = new Tile(0,0,0);
 		var index = openList.length-1;
 		tempTile = openList[index];
@@ -751,18 +755,17 @@ function createPath(a , b, scene) {
 			if(tempTile.cost > openList[i].cost) {
 				tempTile = openList[i];
 				index = i;
-				console.log("tempTile changed");
 			}
 		}
-		console.log(index);
-		openList.splice(index, 1);
+		openList = []
 		curr = new Tile(0,0,0);
 		curr = tempTile;
-		console.log(curr);
-	} while(closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y);
+	} while((closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y) && curr != null);
 
 	console.log(openList);
 	console.log(closedList);
+
+	return closedList;
 }
 
 
