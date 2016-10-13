@@ -242,7 +242,7 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = 0.1; //getRandomArbitrary(0.004, 0.007);
+	this.speed = getRandomArbitrary(0.05, 0.1);
 	//this.img = document.getElementById("chest");
 	this.path;
 	var n = 0;
@@ -254,7 +254,6 @@ function Enemy(x, y) {
 		//Store previous values of X and Y (for collisions)
 		var prevX = this.transform.position.x;
 		var prevY = this.transform.position.y;
-		console.log(n);
 		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
@@ -264,14 +263,11 @@ function Enemy(x, y) {
 				this.playerPos.y = player.transform.position.y;
 				this.path = createPath(this,player,scene);
 				if(this.path.length < 2) {
-					console.log("setting 0");
 					n = 0;
 				} 
 				else {
-					console.log("setting 1");
 					n = 1;
 				} 
-				console.log(this.path);
 			}
 
 			else if(n < this.path.length-1) {
@@ -298,7 +294,6 @@ function Enemy(x, y) {
 
 	this.Start = function(scene) {
 		this.path = createPath(this,player,scene);
-		console.log(this.path);
 
 	}
 
