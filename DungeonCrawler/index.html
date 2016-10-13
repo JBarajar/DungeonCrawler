@@ -242,7 +242,7 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = 0.1; //getRandomArbitrary(0.0001, 0.0007);
+	this.speed = 0.1; //getRandomArbitrary(0.004, 0.007);
 	//this.img = document.getElementById("chest");
 	this.path;
 	var n = 0;
@@ -251,10 +251,34 @@ function Enemy(x, y) {
 	this.playerPos.y = player.transform.position.y;
 
 	this.Move = function(target,scene) {
+		//Store previous values of X and Y (for collisions)
 		var prevX = this.transform.position.x;
 		var prevY = this.transform.position.y;
+		console.log(n);
+		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
+			this.transform.position.x = target.tile.x*16;
+			this.transform.position.y = target.tile.y*16;
 
-		if(this.transform.position.x - target.tile.x*16 < 1 && this.transform.position.y - target.tile.y*16 < 1 && n < this.path.length-1) n++;
+			if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
+				this.playerPos.x = player.transform.position.x;
+				this.playerPos.y = player.transform.position.y;
+				this.path = createPath(this,player,scene);
+				if(this.path.length < 2) {
+					console.log("setting 0");
+					n = 0;
+				} 
+				else {
+					console.log("setting 1");
+					n = 1;
+				} 
+				console.log(this.path);
+			}
+
+			else if(n < this.path.length-1) {
+				n++;
+			}
+			
+		} 
 		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
@@ -279,41 +303,9 @@ function Enemy(x, y) {
 	}
 
 	this.Update = function(scene) {
-		if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
-			this.playerPos.x = player.transform.position.x;
-			this.playerPos.y = player.transform.position.y;
-			n=1;
-			this.path = createPath(this,player,scene);
-		}
-
-			
-
-		//Store previous values of X and Y (for collisions)
 		
-
 
 		this.Move(this.path[n],scene);
-		//this.transform.position.y = lerp2(this.transform.position.y, player.transform.position.y, scene.deltaTime*this.speed);
-
-		
-		
-
-
-		
-
-
-		
-		//this.transform.position.x = lerp2(this.transform.position.x, player.transform.position.x, scene.deltaTime*this.speed);
-
-
-		
-		
-		
-		
-			
-
-	
-
 
 	}
 
@@ -389,7 +381,7 @@ function Door(x, y) {
 
 function Player() {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(15, 15);
+	this.boxCollider = new BoxCollider(16, 16);
 	this.transform.position.x = 64;
 	this.transform.position.y = 64;
 
@@ -600,9 +592,9 @@ function Scene() {
 	this.tiles = [[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
 				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
 				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
+				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
 				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
 				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
 				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
@@ -701,12 +693,17 @@ function Tile(x, y, cost) {
 		return Math.floor(n/16);
 	}
 	this.getCost = function(s, end) {
-		return Math.abs(this.tile.x - s.tile.x) + Math.abs(this.tile.y - s.tile.y) + 10*(Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y));
+		this.g = this.parent.g + 1;
+		this.h = Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y)
+		return this.g + this.h;
 	}
 
 	this.tile = new Vector2();
 	this.tile.x = this.getTile(x);
 	this.tile.y = this.getTile(y);
+	this.parent;
+	this.g = 0;
+	this.h = 0;
 	this.cost = cost;
 }
 
@@ -732,8 +729,22 @@ function createPath(a , b, scene) {
 			tempTile = new Tile(0,0,0);
 			tempTile.tile.x = x;
 			tempTile.tile.y = y;
+			tempTile.parent = curr;
 			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList)) openList.push(tempTile);
+			if(!inList(tempTile, closedList)) {
+				if(inList(tempTile, openList)) {
+					var i = 0;
+					for(i = 0; i < openList.length-1;i++) {
+						if(tempTile.tile.x == openList[i].tile.x && tempTile.tile.y == openList[i].tile.y) {
+
+						}
+					}
+				}
+				else {
+					openList.push(tempTile);
+				} 
+				
+			} 
 		}
 	}
 
@@ -752,20 +763,32 @@ function createPath(a , b, scene) {
 		var index = openList.length-1;
 		tempTile = openList[index];
 		for(var i = openList.length-1; i >= 0; i--) {
-			if(tempTile.cost > openList[i].cost) {
+			if(openList[i].tile.x == target.tile.x && openList[i].tile.y == target.tile.y) {
+				tempTile = openList[i];
+				index = i;
+				break;
+			}
+			else if(tempTile.cost > openList[i].cost) {
 				tempTile = openList[i];
 				index = i;
 			}
 		}
-		openList = []
+		openList.splice(index,1);
 		curr = new Tile(0,0,0);
 		curr = tempTile;
 	} while((closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y) && curr != null);
 
-	console.log(openList);
-	console.log(closedList);
+	var list = new Array();
+	var c = new Tile();
+	var c = closedList[closedList.length-1];
+	while (c != null) {
+		list.push(c);
+		c = new Tile();
+		c = list[list.length-1].parent;
+	}
+	list.reverse();
 
-	return closedList;
+	return list;
 }
 
 
