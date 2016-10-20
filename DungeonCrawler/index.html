@@ -242,7 +242,7 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = getRandomArbitrary(0.05, 0.1);
+	this.speed = getRandomArbitrary(0.07, 0.1);
 	//this.img = document.getElementById("chest");
 	this.path;
 	var n = 0;
@@ -709,6 +709,28 @@ function inList(t, cl) {
     return false;
 }
 
+function findObjects(scene, type) {
+    var objList = [];
+
+    for (var i = 0; i < scene.GameObjects.length; i++) {
+        if(Array.isArray(type)) {
+            for(var j = 0; j < type.length; j++) {
+                if(scene.GameObjects[i].type == type[j]) {
+                    objList.push(new Tile(scene.GameObjects[i].transform.position.x, scene.GameObjects[i].transform.position.y, 0));
+                }
+            }
+        }
+        else {
+            if(scene.GameObjects[i].type == type) {
+            objList.push(new Tile(scene.GameObjects[i].transform.position.x, scene.GameObjects[i].transform.position.y, 0));
+        }
+        }
+        
+    }
+
+    return objList;
+}
+
 function createPath(a , b, scene) {
 	var map = new Array();
 	map = scene.tiles;
@@ -719,6 +741,7 @@ function createPath(a , b, scene) {
 
 	var target = new Tile(b.transform.position.x, b.transform.position.y);
 	var tempTile = new Tile(0,0,0);
+    var objList = findObjects(scene, ["Chest", "Enemy"]);
 	this.addAdjTile = function(x,y) {
 		if(map[y][x] == 1) {
 			tempTile = new Tile(0,0,0);
@@ -726,7 +749,7 @@ function createPath(a , b, scene) {
 			tempTile.tile.y = y;
 			tempTile.parent = curr;
 			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList)) {
+			if(!inList(tempTile, closedList) && !inList(tempTile, objList)) {
 				if(inList(tempTile, openList)) {
 					var i = 0;
 					for(i = 0; i < openList.length-1;i++) {
