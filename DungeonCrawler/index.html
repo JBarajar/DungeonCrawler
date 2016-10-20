@@ -709,13 +709,23 @@ function inList(t, cl) {
     return false;
 }
 
-function findChests(scene) {
+function findObjects(scene, type) {
     var objList = [];
 
     for (var i = 0; i < scene.GameObjects.length; i++) {
-        if(scene.GameObjects[i].type == "Chest") {
+        if(Array.isArray(type)) {
+            for(var j = 0; j < type.length; j++) {
+                if(scene.GameObjects[i].type == type[j]) {
+                    objList.push(new Tile(scene.GameObjects[i].transform.position.x, scene.GameObjects[i].transform.position.y, 0));
+                }
+            }
+        }
+        else {
+            if(scene.GameObjects[i].type == type) {
             objList.push(new Tile(scene.GameObjects[i].transform.position.x, scene.GameObjects[i].transform.position.y, 0));
         }
+        }
+        
     }
 
     return objList;
@@ -731,7 +741,7 @@ function createPath(a , b, scene) {
 
 	var target = new Tile(b.transform.position.x, b.transform.position.y);
 	var tempTile = new Tile(0,0,0);
-    var objList = findChests(scene);
+    var objList = findObjects(scene, ["Chest", "Enemy"]);
 	this.addAdjTile = function(x,y) {
 		if(map[y][x] == 1) {
 			tempTile = new Tile(0,0,0);
