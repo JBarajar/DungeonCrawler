@@ -88,7 +88,7 @@ function BoxCollider(width, height, parent, isTrigger) {
 	this.width = width;
 	this.height = height;
 
-	this.checkWallCollision = function(scene, position) {
+	this.checkCollision = function(scene, position) {
 
 
 
@@ -118,46 +118,6 @@ function BoxCollider(width, height, parent, isTrigger) {
 					return true;
 
 				}
-		}
-
-		for(var i = 0; i < scene.GameObjects.length; i++) {
-
-
-			//Does the object have a box collider?
-			if(scene.GameObjects[i].boxCollider) {
-
-				if(scene.GameObjects[i].boxCollider != this) {
-
-
-					if (position.x < scene.GameObjects[i].transform.position.x + scene.GameObjects[i].boxCollider.width &&
-					   position.x + this.width > scene.GameObjects[i].transform.position.x &&
-					   position.y < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
-					   this.height + position.y > scene.GameObjects[i].transform.position.y) {
-
-						/*if(scene.GameObjects[i].onCollide) {
-							scene.GameObjects[i].onCollide();
-
-						}*/
-
-						
-						if(scene.GameObjects[i].boxCollider.trigger == true) {
-							return false;
-						}
-						else return true;
-					}
-
-					
-
-					
-
-				}
-
-
-
-
-
-			}
-
 		}
 
 
@@ -200,9 +160,7 @@ function BoxCollider(width, height, parent, isTrigger) {
 		}
 
 		*/
-	}
 
-	this.checkCollision = function(scene, position) {
 		//To-do: check for other box colliders
 
 		for(var i = 0; i < scene.GameObjects.length; i++) {
@@ -228,7 +186,10 @@ function BoxCollider(width, height, parent, isTrigger) {
 							this.parent.onCollide(scene.GameObjects[i]);
 						}
 
-						return true;
+						if(scene.GameObjects[i].boxCollider.trigger == true) {
+							return false;
+						}
+						else return true;
 					}
 
 					
@@ -248,8 +209,6 @@ function BoxCollider(width, height, parent, isTrigger) {
 		return false;
 
 	}
-
-
 }
 
 
@@ -321,12 +280,12 @@ function Enemy(x, y) {
 			
 		} 
 		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
-		if(this.boxCollider.checkWallCollision(scene, this.transform.position)) {
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
 
 		}
 		this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed)
-		if(this.boxCollider.checkWallCollision(scene, this.transform.position)) {
+		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.y = prevY;
 
 		}
@@ -482,8 +441,7 @@ function Player() {
 			*/
 
 
-			this.boxCollider.checkCollision(scene, this.transform.position);
-			if(this.boxCollider.checkWallCollision(scene, this.transform.position)) {
+			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 				this.transform.position.y = prevY;
 
 			};
@@ -519,8 +477,7 @@ function Player() {
 
 			*/
 
-			this.boxCollider.checkCollision(scene, this.transform.position);
-			if(this.boxCollider.checkWallCollision(scene, this.transform.position)) {
+			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 				this.transform.position.x = prevX;
 
 			};
