@@ -266,6 +266,7 @@ function Enemy(x, y) {
 				this.playerPos.x = player.transform.position.x;
 				this.playerPos.y = player.transform.position.y;
 				this.path = createPath(this,player,scene);
+				
 				if(this.path.length < 2) {
 					n = 0;
 				} 
@@ -292,8 +293,16 @@ function Enemy(x, y) {
 	}
 
 	this.onCollide = function(collider) {
-		
+		if(collider.type == "Player") {
+			collider.health -= 10;
+			console.log(collider.health);
 
+			var targetX = collider.transform.position.x - ((this.transform.position.x - collider.transform.position.x) * 10) // 2 is knockback multiplier
+			var targetY = collider.transform.position.y - ((this.transform.position.y - collider.transform.position.y) * 10) // 2 is knockback multiplier
+			collider.transform.position.x = lerp2(collider.transform.position.x, targetX, this.speed);
+			console.log("collider.transform.position.x: " + collider.transform.position.x)
+			collider.transform.position.y = lerp2(collider.transform.position.y, targetY, this.speed);
+		}
 	}
 
 	this.Start = function(scene) {
@@ -379,8 +388,9 @@ function Door(x, y) {
 
 
 function Player() {
+	this.type = "Player";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16, this, true);
+	this.boxCollider = new BoxCollider(24, 24, this, true);
 	this.transform.position.x = 64;
 	this.transform.position.y = 64;
 	var prevX = this.transform.position.x;
@@ -389,6 +399,13 @@ function Player() {
 	this.speed = 0.1;
 
 	this.health = 100;
+
+	// TODO: Implement a die function
+	this.die = function() {
+		if (this.health <= 0) {
+			
+		}
+	}
 
 	this.onCollide = function(collider) {
 		if(collider.type == "Chest") {
@@ -479,7 +496,6 @@ function Player() {
 
 			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 				this.transform.position.x = prevX;
-
 			};
 			
 
