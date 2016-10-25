@@ -62,6 +62,8 @@ document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
 
 var player;
+//tile offest (tile size /2)
+var tO = 8;
 
 
 Scene.Start();
@@ -251,8 +253,8 @@ function Enemy(x, y) {
 	this.path;
 	var n = 0;
 	this.playerPos = new Vector2();
-	this.playerPos.x = player.transform.position.x;
-	this.playerPos.y = player.transform.position.y;
+	this.playerPos.x = player.transform.position.x+tO;
+	this.playerPos.y = player.transform.position.y+tO;
 
 	this.Move = function(target,scene) {
 		//Store previous values of X and Y (for collisions)
@@ -262,9 +264,9 @@ function Enemy(x, y) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
-			if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
-				this.playerPos.x = player.transform.position.x;
-				this.playerPos.y = player.transform.position.y;
+			if(Math.floor(this.playerPos.x/16) != Math.floor((player.transform.position.x+tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((player.transform.position.y+tO)/16)) {
+				this.playerPos.x = player.transform.position.x+tO;
+				this.playerPos.y = player.transform.position.y+tO;
 				this.path = createPath(this,player,scene);
 				
 				if(this.path.length < 2) {
@@ -294,14 +296,10 @@ function Enemy(x, y) {
 
 	this.onCollide = function(collider) {
 		if(collider.type == "Player") {
-			collider.health -= 10;
-			console.log(collider.health);
-
-			var targetX = collider.transform.position.x - ((this.transform.position.x - collider.transform.position.x) * 10) // 2 is knockback multiplier
-			var targetY = collider.transform.position.y - ((this.transform.position.y - collider.transform.position.y) * 10) // 2 is knockback multiplier
-			collider.transform.position.x = lerp2(collider.transform.position.x, targetX, this.speed);
-			console.log("collider.transform.position.x: " + collider.transform.position.x)
-			collider.transform.position.y = lerp2(collider.transform.position.y, targetY, this.speed);
+            if(!collider.knockBack == false) {
+                collider.health -= 10;
+            }
+			
 		}
 	}
 
@@ -390,11 +388,18 @@ function Door(x, y) {
 function Player() {
 	this.type = "Player";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(24, 24, this, true);
+	this.boxCollider = new BoxCollider(16, 16, this, true);
 	this.transform.position.x = 64;
 	this.transform.position.y = 64;
+    this.knockBack = false;
+    this.invuln = false;
+    this.flash = false;
+    this.flashing = false;
+    
+    this.kbtarget = new Vector2();
 	var prevX = this.transform.position.x;
 	var prevY = this.transform.position.y;
+    var invuln = this.invuln;
 
 	this.speed = 0.1;
 
@@ -402,10 +407,20 @@ function Player() {
 
 	// TODO: Implement a die function
 	this.die = function() {
-		if (this.health <= 0) {
-			
-		}
+        
 	}
+
+    this.resetInvuln = function() {
+        player.invuln = false;
+        console.log("resetInvuln");
+    }
+    this.setFlash = function() {
+        if(player.flash) {
+            player.flash = false;
+        }
+        else {player.flash = true;}
+        if(player.invuln) {setTimeout(player.setFlash, 200);}
+    }
 
 	this.onCollide = function(collider) {
 		if(collider.type == "Chest") {
@@ -413,115 +428,119 @@ function Player() {
 			console.log("Hit Chest");
 		}
 		if(collider.type == "Enemy") {
-			console.log("Hit Enemy");
+            if(!this.invuln) {
+                if(this.knockBack == false) {
+                    console.log("Hit Enemy");
+                    this.knockBack = true;
+                    this.invuln = true;
+                    setTimeout(this.resetInvuln, 1500);
+                    this.kbtarget.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
+                    this.kbtarget.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
+                }
+			}
 		}
 
 	}
 
 	this.Start = function(scene) {
-
+        
 		
 	}
 
 	this.Update = function(scene) {
-		prevX = this.transform.position.x;
-		prevY = this.transform.position.y;
+        //Store previous values of X and Y (for collisions)
+        prevX = this.transform.position.x;
+        prevY = this.transform.position.y;
 
-		//console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
-		//console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
+        if(this.health <= 0) {
+                this.die();
+        }
 
-		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
+        scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
 
-		//Store previous values of X and Y (for collisions)
-		
+        if(this.knockBack) {
+            this.transform.position.y = lerp2(this.transform.position.y, this.kbtarget.y, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.y = prevY;
+                this.knockBack = false;
+            }
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbtarget.x, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.x = prevX;
+                this.knockBack = false;
+            }
 
-		if(input.w || input.s) {
-			if(input.w) {
-				this.transform.position.y -= (scene.deltaTime * this.speed);
+            if(Math.abs(this.transform.position.x - this.kbtarget.x) < 1 && Math.abs(this.transform.position.y - this.kbtarget.y) < 1) {
+                this.knockBack = false;
+            }
+        }
 
-			}
+        else {
+            
+    		
 
-			if(input.s) {
-				this.transform.position.y += (scene.deltaTime * this.speed);
+    		if(input.w || input.s) {
+    			if(input.w) {
+    				this.transform.position.y -= (scene.deltaTime * this.speed);
+                }
 
-			}
+    			if(input.s) {
+    				this.transform.position.y += (scene.deltaTime * this.speed);
+    			}	
+    		}
 
-			/*
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                    this.transform.position.y = prevY;
 
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.y = prevY;
-
-				}
-			}
-			*/
-
-
-			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-				this.transform.position.y = prevY;
-
-			};
-			
-
-
-		}
-
-
-		
-
-		if(input.a || input.d) {
-			if(input.a) {
-				this.transform.position.x -= (scene.deltaTime * this.speed);
-
-			}
-
-			if(input.d) {
-				this.transform.position.x += (scene.deltaTime * this.speed);
-
-			}
-
-			/*
-
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.x = prevX;
-
-				}
-
-			}
-
-			*/
-
-			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-				this.transform.position.x = prevX;
-			};
-			
-
-			
-
-		}
-
-		
-
-		
+            };
 
 
+    		
 
+    		if(input.a || input.d) {
+    			if(input.a) {
+    				this.transform.position.x -= (scene.deltaTime * this.speed);
+    			}
 
+    			if(input.d) {
+    				this.transform.position.x += (scene.deltaTime * this.speed);
+    			}
+    		}
+
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                    this.transform.position.x = prevX;
+            }
+        }
 	}
 
 	this.Draw = function(scene) {
+        if(this.knockBack) ctx.fillStyle = "red";
+        else if(this.invuln) {
+            if(!this.flashing) {
+                this.flashing = true;
+                this.flash = true;
+                setTimeout(this.setFlash, 200);
+            }
+            
+            if(this.flash) {
+                ctx.fillStyle = "#D6D5D5";
+            }
+            else {
+                ctx.fillStyle = "#000000";
+            }
+        }
+        else {
+            this.flashing = false;
+            ctx.fillStyle = "#000000";
+        }
 
-		 ctx.fillStyle = "#000000";
-
-		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
-
-
-		 //ctx.fillStyle = "red";
-
-
+		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+         
+        ctx.fillStyle = "red";
+        if(this.health <= 0) {
+            //ctx.fillRect(10,10,0,10);
+        } 
+        else ctx.fillRect(10,10,this.health,10);
 	}
 
 }
@@ -765,7 +784,7 @@ function createPath(a , b, scene) {
 	var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
 	var curr = start;
 
-	var target = new Tile(b.transform.position.x, b.transform.position.y);
+	var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
 	var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
 	this.addAdjTile = function(x,y) {
