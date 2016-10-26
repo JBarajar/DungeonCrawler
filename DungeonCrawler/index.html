@@ -57,6 +57,7 @@ var ctx = canvas.getContext("2d");
 var Scene = new Scene();
 var startTime = new Date();
 var endTime = new Date();
+var draw = true;
 
 document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
@@ -85,7 +86,7 @@ function Transform() {
 
 function BoxCollider(width, height, parent, isTrigger) {
 	this.parent  = parent;
-	this.offset = new Vector2();
+	this.offset = new Vector2(); 
 	this.trigger = isTrigger;
 	this.width = width;
 	this.height = height;
@@ -407,7 +408,18 @@ function Player() {
 
 	// TODO: Implement a die function
 	this.die = function() {
-        
+    // Stops updating screen when player dies
+    draw = false;
+
+    ctx.fillStyle = "#000";
+
+    ctx.fillRect(0,0,width,height);
+
+    ctx.font = "20px sans-serif";
+    ctx.fillStyle = "red";
+
+    ctx.fillText("You dead",(width / 3),(height / 2));
+
 	}
 
     this.resetInvuln = function() {
@@ -419,7 +431,7 @@ function Player() {
             player.flash = false;
         }
         else {player.flash = true;}
-        if(player.invuln) {setTimeout(player.setFlash, 200);}
+        if(player.invuln) {setTimeout(player.setFlash, 100);}
     }
 
 	this.onCollide = function(collider) {
@@ -433,7 +445,8 @@ function Player() {
                     console.log("Hit Enemy");
                     this.knockBack = true;
                     this.invuln = true;
-                    setTimeout(this.resetInvuln, 1500);
+                    // Invulnerability timer
+                    setTimeout(this.resetInvuln, 1000);
                     this.kbtarget.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
                     this.kbtarget.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
                 }
@@ -519,7 +532,7 @@ function Player() {
             if(!this.flashing) {
                 this.flashing = true;
                 this.flash = true;
-                setTimeout(this.setFlash, 200);
+                setTimeout(this.setFlash, 100);
             }
             
             if(this.flash) {
@@ -691,14 +704,15 @@ function Scene() {
 	}
 
 	this.Draw = function() {
-		ctx.fillStyle = "#BBBBBB";
-		ctx.fillRect(0, 0, width, height);
+    // Draws when draw is true
+    if (draw) {
+      ctx.fillStyle = "#BBBBBB";
+      ctx.fillRect(0, 0, width, height);
 
-
-		for(var i = 0; i < this.GameObjects.length; i++) {
-			this.GameObjects[i].Draw(this);
-		}
-
+      for(var i = 0; i < this.GameObjects.length; i++) {
+        this.GameObjects[i].Draw(this);
+      }
+    }
 	}
 
 	this.GameObjects.push(new TileRenderer());
@@ -709,6 +723,10 @@ function Scene() {
 	this.GameObjects.push(new Chest(12,10));
 	enemy = new Enemy(9,4);
 	this.GameObjects.push(enemy);
+  enemy = new Enemy(10,5);
+  this.GameObjects.push(enemy);
+  enemy = new Enemy(11,6);
+  this.GameObjects.push(enemy);
 	
 	
 
