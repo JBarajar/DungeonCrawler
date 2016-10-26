@@ -385,6 +385,27 @@ function Door(x, y) {
 
 }
 
+function Swing(dir,pos,damage) {
+  boxCollider = new BoxCollider(16,16,null,true);
+  var boxPos = new vector2();
+  if (dir == "up") {
+    boxPos.x = pos.x;
+      if(checkCollision(scene, pos-))
+  }
+
+  if (dir == "down") {
+
+  }
+  
+  if (dir == "left") {
+
+  }
+  
+  if (dir == "right") {
+
+  }
+  
+}
 
 function Player() {
 	this.type = "Player";
@@ -396,6 +417,7 @@ function Player() {
     this.invuln = false;
     this.flash = false;
     this.flashing = false;
+    this.dir = "left" 
     
     this.kbtarget = new Vector2();
 	var prevX = this.transform.position.x;
@@ -405,6 +427,19 @@ function Player() {
 	this.speed = 0.1;
 
 	this.health = 100;
+
+  this.inventory = {
+    "sword": true
+  };
+
+
+  // Collection of attacks?
+  this.attack = function() {
+    // Melee attack
+    if (this.inventory["sword"]) {
+
+    }
+  }
 
 	// TODO: Implement a die function
 	this.die = function() {
@@ -461,6 +496,7 @@ function Player() {
 	}
 
 	this.Update = function(scene) {
+        console.log(this.dir);
         //Store previous values of X and Y (for collisions)
         prevX = this.transform.position.x;
         prevY = this.transform.position.y;
@@ -494,10 +530,12 @@ function Player() {
 
     		if(input.w || input.s) {
     			if(input.w) {
+            this.dir = "up";
     				this.transform.position.y -= (scene.deltaTime * this.speed);
                 }
 
     			if(input.s) {
+            this.dir = "down";
     				this.transform.position.y += (scene.deltaTime * this.speed);
     			}	
     		}
@@ -512,10 +550,12 @@ function Player() {
 
     		if(input.a || input.d) {
     			if(input.a) {
+            this.dir = "left";
     				this.transform.position.x -= (scene.deltaTime * this.speed);
     			}
 
     			if(input.d) {
+            this.dir = "right";
     				this.transform.position.x += (scene.deltaTime * this.speed);
     			}
     		}
