@@ -46,7 +46,8 @@ var input = {
 		w: false,
 		s: false,
 		a: false,
-		d: false
+		d: false,
+        space: false
 }
 
 
@@ -250,6 +251,7 @@ function Enemy(x, y) {
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
 	this.speed = getRandomArbitrary(0.07, 0.1);
+    this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
 	var n = 0;
@@ -296,12 +298,7 @@ function Enemy(x, y) {
 	}
 
 	this.onCollide = function(collider) {
-		if(collider.type == "Player") {
-            if(!collider.knockBack == false) {
-                collider.health -= 10;
-            }
-			
-		}
+		
 	}
 
 	this.Start = function(scene) {
@@ -386,24 +383,40 @@ function Door(x, y) {
 }
 
 function Swing(dir,pos,damage) {
-  boxCollider = new BoxCollider(16,16,null,true);
-  var boxPos = new vector2();
+
+  var tileSize = 16;
+  this.boxCollider = new BoxCollider(16,16,this,true);
+  var boxPos = new Vector2();
+
+  this.onCollide = function(collider) {
+    if(collider.type == "Enemy") {
+        console.log("attacked Enemy");
+    }
+  }
+
   if (dir == "up") {
     boxPos.x = pos.x;
-      if(checkCollision(scene, pos-))
+    boxPos.y = pos.y - tileSize;
   }
 
   if (dir == "down") {
-
+    boxPos.x = pos.x;
+    boxPos.y = pos.y + tileSize;
   }
   
   if (dir == "left") {
-
+    boxPos.x = pos.x - tileSize;
+    boxPos.y = pos.y;
   }
   
   if (dir == "right") {
-
+    boxPos.x = pos.x + tileSize;
+    boxPos.y = pos.y;
   }
+
+  boxCollider.checkCollision(Scene, boxPos);
+
+  
   
 }
 
@@ -428,32 +441,32 @@ function Player() {
 
 	this.health = 100;
 
-  this.inventory = {
-    "sword": true
-  };
+    this.inventory = {
+        "sword": true
+    };
 
 
-  // Collection of attacks?
-  this.attack = function() {
-    // Melee attack
-    if (this.inventory["sword"]) {
+    // Collection of attacks?
+    this.attack = function() {
+      // Melee attack
+      if (this.inventory["sword"]) {
 
+      }
     }
-  }
 
 	// TODO: Implement a die function
 	this.die = function() {
-    // Stops updating screen when player dies
-    draw = false;
+        // Stops updating screen when player dies
+        draw = false;
 
-    ctx.fillStyle = "#000";
+        ctx.fillStyle = "#000";
 
-    ctx.fillRect(0,0,width,height);
+        ctx.fillRect(0,0,width,height);
 
-    ctx.font = "26px sans-serif";
-    ctx.fillStyle = "red";
+        ctx.font = "26px sans-serif";
+        ctx.fillStyle = "red";
 
-    ctx.fillText("You dead",(width / 3),(height / 2));
+        ctx.fillText("You dead",(width / 3),(height / 2));
 
 	}
 
@@ -476,12 +489,13 @@ function Player() {
 		}
 		if(collider.type == "Enemy") {
             if(!this.invuln) {
-                if(this.knockBack == false) {
+                if(!this.knockBack) {
                     console.log("Hit Enemy");
                     this.knockBack = true;
                     this.invuln = true;
                     // Invulnerability timer
                     setTimeout(this.resetInvuln, 1000);
+                    this.health = this.health - collider.damage;
                     this.kbtarget.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
                     this.kbtarget.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
                 }
@@ -562,6 +576,10 @@ function Player() {
 
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
                     this.transform.position.x = prevX;
+            }
+
+            if(input.space) {
+                Swing(this.dir, this.transform.position, 10);
             }
         }
 	}
@@ -926,6 +944,9 @@ function doKeyDown(e) {
 			} else if(code == 68) { // d
 				input.d = true;
 			}
+            else if(code == 32) { // d
+                input.space = true;
+            }
 	}
 
 	function doKeyRelease(e) {
@@ -940,7 +961,9 @@ function doKeyDown(e) {
 				input.a = false;
 			} else if(code == 68) { // d
 				input.d = false;
-			}
+			} else if(code == 32) { // d
+                input.space = false;
+            }
 
 
 
