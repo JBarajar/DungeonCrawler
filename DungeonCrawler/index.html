@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+
 <style type="text/css">
 
 body {
@@ -16,18 +17,21 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    max-width: 100%;
-    max-height: 100%;
-    height: 100%;
+max-width: 100%;
+max-height: 100%;
     margin: auto;
-    overflow: auto;
     background-color: white;
+      image-rendering: pixelated;  
+
 
 
 }
 
 
+
+
 </style>
+
 
 
 </head>
@@ -37,9 +41,14 @@ body {
 
 <div style="display:none;">
 		<img id="chest" src="img/chest.png" />
+		<img id="basicTiles" src="img/basictiles.png" />
+		<img id="characters" src="img/characters.png" />
 </div>
 	
 </body>
+
+<script type="text/javascript" src="/scripts/jquery-3.1.1.min.js"></script>
+
 <script type="text/javascript">
 
 var input = {
@@ -54,19 +63,32 @@ var width = 320;
 var height = 240;
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-var Scene = new Scene();
+var Scene;
 var startTime = new Date();
 var endTime = new Date();
+
+var tileImage;
+
 
 document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
 
-var player;
+
+$(function() {
+
+	Scene = new Scene();
+	tileImage = document.getElementById("basicTiles");
 
 
-Scene.Start();
+	Scene.Start();
 
-requestAnimationFrame(mainLoop);
+	requestAnimationFrame(mainLoop);
+
+});
+
+
+
+
 
 //X & Y coordinates
 function Vector2() {
@@ -91,6 +113,7 @@ function BoxCollider(width, height) {
 	this.checkCollision = function(scene, position) {
 
 
+		/*
 
 		if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x)/16)]) {
 				if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x)/16)] == 2) {
@@ -120,47 +143,8 @@ function BoxCollider(width, height) {
 				}
 		}
 
-
-		/*
-
-		//Top left
-		if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x - this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x - this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-		//Top right
-		if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x + this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x + this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-
-		//Bottom left
-		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x - this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x - this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-		//Bottom right
-		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
 		*/
-
+		
 
 		//To-do: check for other box colliders
 
@@ -318,12 +302,46 @@ function Enemy(x, y) {
 
 }
 
+function StaticProp(buffer, x, y) {
+	this.transform = new Transform();
+	this.boxCollider = new BoxCollider(16, 16);
+	this.transform.position.x = x;
+	this.transform.position.y = y;
+
+	this.offset = new Vector2();
+	this.offset.x = 0;
+	this.offset.y = -16;
+	this.img = buffer;
+
+	this.onCollide = function() {
+		this.isOpen = 1;
+	}
+
+	this.Start = function(scene) {
+
+
+	}
+
+	this.Update = function(scene) {
+
+
+	}
+
+	this.Draw = function(scene) {
+		ctx.drawImage(this.img, 0, 0, 16, 16, Math.floor((this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x)),Math.floor((this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y)), 16, 16);
+
+
+	}
+
+
+}
+
 function Chest(x, y) {
 	this.type = "Chest";
 	this.transform = new Transform();
 	this.boxCollider = new BoxCollider(16, 16);
-	this.transform.position.x = x*16;
-	this.transform.position.y = y*16;
+	this.transform.position.x = x;
+	this.transform.position.y = y;
 	this.img = document.getElementById("chest");
 
 	this.Inventory = [];
@@ -376,6 +394,10 @@ function Player() {
 	this.speed = 0.1;
 
 	this.health = 100;
+	this.img = document.getElementById("characters");
+	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+	this.frame = 0;
+
 
 	this.onCollide = function(scene) {
 
@@ -398,14 +420,26 @@ function Player() {
 		var prevX = this.transform.position.x;
 		var prevY = this.transform.position.y;
 
+		if(input.w || input.s || input.a || input.d) {
+
+			this.frame += scene.deltaTime*0.01;
+			this.frame = this.frame % 3;
+
+		}
+
+
 		if(input.w || input.s) {
 			if(input.w) {
 				this.transform.position.y -= (scene.deltaTime * this.speed);
+				this.facing = 3; //Up
+
+
 
 			}
 
 			if(input.s) {
 				this.transform.position.y += (scene.deltaTime * this.speed);
+				this.facing = 0; //Down
 
 			}
 
@@ -437,11 +471,13 @@ function Player() {
 		if(input.a || input.d) {
 			if(input.a) {
 				this.transform.position.x -= (scene.deltaTime * this.speed);
+				this.facing = 1; //Left
 
 			}
 
 			if(input.d) {
 				this.transform.position.x += (scene.deltaTime * this.speed);
+				this.facing = 2; //Right
 
 			}
 
@@ -483,7 +519,9 @@ function Player() {
 
 		 ctx.fillStyle = "#000000";
 
-		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+		 //ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+
+		 ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 
 
 		 //ctx.fillStyle = "red";
@@ -493,32 +531,151 @@ function Player() {
 
 }
 
+function loadMapData(tileRenderer) {
+
+
+
+	
+
+}
+
 
 function TileRenderer() {
 	this.transform = new Transform();
-	
+
+	this.map = {};
+	this.img = document.getElementById("basicTiles");
+
+	this.tileBuffer = document.createElement('canvas');;
+
+	this.tileContext = this.tileBuffer.getContext('2d');
 
 	this.Start = function(scene) {
 
-		for(var i = 0; i < scene.tiles.length; i++) {
+		this.tileBuffer = document.createElement('canvas');
+		this.tileContext = this.tileBuffer.getContext('2d');
+		this.img = document.getElementById("basicTiles");
 
-			for(var j = 0; j < scene.tiles[i].length; j++) {
+		$.ajaxSetup({async: false});
 
-				if(scene.tiles[j][i] == 1) {
-					scene.tileContext.strokeStyle = "#CCCCCC"
-					scene.tileContext.strokeRect(i*16,j*16,16,16);
+		console.log("before map load");
+		var mapData = {};
+
+		$.get('/maps/testMap.json', function(data) {
+			mapData = data;
+			console.log("during map load");
+
+
+		});
+
+		console.log("after map load");
+
+		this.map = mapData;
+
+		this.tileBuffer.width = this.map.width * 16;
+		this.tileBuffer.height = this.map.height * 16;
+
+		for(var i = 0; i < this.map.layers.length; i++) {
+
+				if(this.map.layers[i].type == "tilelayer") {
+
+					for(var y = 0; y < this.map.height; y++) {
+
+						for(var x = 0; x < this.map.width; x++) {
+
+							var tileID = this.map.layers[i].data[x + this.map.width*y] - 1;
+
+							var tX = tileID % 8;
+							var tY = Math.floor(tileID / 8);
+
+						    this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, x*16, y*16, this.map.tilewidth, this.map.tileheight);
+
+
+						}
+
+					}
+
+
+				} else if(this.map.layers[i].type == "objectgroup") {
+					for(var o = 0; o < this.map.layers[i].objects.length; o++) {
+
+						var gID = this.map.layers[i].objects[o].gid - 1;
+
+						var tX = gID % 8;
+						var tY = Math.floor(gID / 8);
+
+						var imgBuffer = document.createElement('canvas');
+						var imgCtx = imgBuffer.getContext('2d');
+
+						imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
+
+
+						scene.GameObjects.push(new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y));
+
+
+
+					}
+
+
 				}
 
-				if(scene.tiles[j][i] == 2) {
-					scene.tileContext.fillRect(i*16,j*16,16,16);
-
-				}
 
 			}
 
-		}
 
 
+		/*
+	
+			$.get('/maps/testMap.json', function(data) {
+				this.tileBuffer = document.createElement('canvas');
+				this.tileContext = this.tileBuffer.getContext('2d');
+				this.img = document.getElementById("basicTiles");
+
+				this.map = data;
+
+
+				this.tileBuffer.width = this.map.width * this.map.tilewidth;
+			this.tileBuffer.height = this.map.height * this.map.tileheight;
+
+			for(var i = 0; i < this.map.layers.length; i++) {
+
+				if(this.map.layers[i].type == "tilelayer") {
+
+					for(var y = 0; y < this.map.height; y++) {
+
+						for(var x = 0; x < this.map.width; x++) {
+
+							var tileID = this.map.layers[i].data[x + this.map.width*y] - 1;
+
+							var tX = tileID % 8;
+							var tY = tileID / 8;
+
+						    this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, this.map.tilewidth, this.map.tileheight, this.map.tilewidth, this.map.tileheight);
+
+
+						}
+
+					}
+
+
+				}
+
+
+			}
+
+			});
+			*/
+
+
+			
+
+			
+
+
+		
+
+
+		
 	}
 
 	this.Update = function(scene) {
@@ -528,7 +685,12 @@ function TileRenderer() {
 	}
 
 	this.Draw = function(scene) {
-		ctx.drawImage(scene.tileBuffer, Math.floor(-scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(-scene.Camera.transform.position.y + scene.Camera.offset.y));
+		
+
+
+		ctx.drawImage(this.tileBuffer, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y + 16), this.map.width*this.map.tilewidth, this.map.height*this.map.tileheight);
+
+
 		
 
 
@@ -577,45 +739,11 @@ function Scene() {
 	this.deltaTime = 0.0;
 	this.Camera = new Camera();
 
-	this.tiles = [[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]];
-
-	this.tileBuffer = document.createElement('canvas');
-	this.tileBuffer.width = 1024;
-	this.tileBuffer.height = 1024;
-	this.tileContext = this.tileBuffer.getContext('2d');
+	
 
 	this.Start = function() {
+
+
 		for(var i = 0; i < this.GameObjects.length; i++) {
 			this.GameObjects[i].Start(this);
 
@@ -652,11 +780,6 @@ function Scene() {
 	this.GameObjects.push(new TileRenderer());
 	player = new Player();
 	this.GameObjects.push(player);
-
-	this.GameObjects.push(new Chest(10,10));
-	this.GameObjects.push(new Chest(12,10));
-	this.GameObjects.push(new Enemy(20,10));
-	this.GameObjects.push(new Enemy(10,5));
 
 
 
