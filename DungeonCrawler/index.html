@@ -47,7 +47,12 @@ var input = {
 		s: false,
 		a: false,
 		d: false,
-        space: false
+    // New key implementations for attacking
+    space: false,
+    arrowKeyUp: false,
+    arrowKeyDown: false,
+    arrowKeyLeft: false,
+    arrowKeyRight: false
 }
 
 
@@ -430,7 +435,7 @@ function Door(x, y) {
 }
 
 function Swing(dir,pos,damage) {
-  this.type  = "Attack";
+  this.type = "Attack";
   var tileSize = 16;
   this.boxCollider = new BoxCollider(16,16,this,true);
   this.boxPos = new Vector2();
@@ -460,6 +465,26 @@ function Swing(dir,pos,damage) {
   if (dir == "right") {
     this.boxPos.x = pos.x + tileSize;
     this.boxPos.y = pos.y;
+  }
+
+  if (dir == "up left") {
+    this.boxPos.x = pos.x - tileSize;
+    this.boxPos.y = pos.y - tileSize;
+  }
+
+  if (dir == "up right") {
+    this.boxPos.x = pos.x + tileSize;
+    this.boxPos.y = pos.y - tileSize;
+  }
+  
+  if (dir == "down left") {
+    this.boxPos.x = pos.x - tileSize;
+    this.boxPos.y = pos.y + tileSize;
+  }
+  
+  if (dir == "down right") {
+    this.boxPos.x = pos.x + tileSize;
+    this.boxPos.y = pos.y + tileSize;
   }
 
   this.boxCollider.checkCollision(Scene, this.boxPos);
@@ -596,12 +621,12 @@ function Player() {
 
     		if(input.w || input.s) {
     			if(input.w) {
-            this.dir = "up";
+            // this.dir = "up";
     				this.transform.position.y -= (scene.deltaTime * this.speed);
                 }
 
     			if(input.s) {
-            this.dir = "down";
+            // this.dir = "down";
     				this.transform.position.y += (scene.deltaTime * this.speed);
     			}	
     		}
@@ -616,18 +641,52 @@ function Player() {
 
     		if(input.a || input.d) {
     			if(input.a) {
-            this.dir = "left";
+            // this.dir = "left";
     				this.transform.position.x -= (scene.deltaTime * this.speed);
     			}
 
     			if(input.d) {
-            this.dir = "right";
+            // this.dir = "right";
     				this.transform.position.x += (scene.deltaTime * this.speed);
     			}
     		}
 
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
                     this.transform.position.x = prevX;
+            }
+
+            // Checks 3 downward directions
+            if(input.arrowKeyDown) {
+              this.dir = "down";
+            }
+
+            // Checks 3 upward directions
+            if(input.arrowKeyUp) {
+              this.dir = "up";
+            }
+
+            if(input.arrowKeyRight) {
+              this.dir = "right";
+            }
+
+            if(input.arrowKeyLeft) {
+              this.dir = "left";
+            }
+
+            if(input.arrowKeyDown && input.arrowKeyLeft) {
+              this.dir = "down left";
+            }
+
+            if(input.arrowKeyDown && input.arrowKeyRight) {
+              this.dir = "down right";
+            }
+
+            if(input.arrowKeyUp && input.arrowKeyLeft) {
+              this.dir = "up left";
+            }
+
+            if(input.arrowKeyUp && input.arrowKeyRight) {
+              this.dir = "up right";
             }
 
             if(input.space) {
@@ -689,6 +748,24 @@ function Player() {
               
               if (this.dir == "right") {
                 ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+              }
+
+
+              // 4 corner directional cases
+              if (this.dir == "up left") {
+                ctx.strokeRect(Math.floor((this.transform.position.x-16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y-16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+              }
+
+              if (this.dir == "up right") {
+                ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y-16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+              }
+              
+              if (this.dir == "down left") {
+                ctx.strokeRect(Math.floor((this.transform.position.x-16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+              }
+              
+              if (this.dir == "down right") {
+                ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
         }
 	}
@@ -1013,6 +1090,7 @@ function createPath(a , b, scene) {
 function doKeyDown(e) {
 
 			var code = e.keyCode;
+      console.log(e.keyCode);
 
 			if (code == 87) { // w
 				input.w = true;
@@ -1023,9 +1101,21 @@ function doKeyDown(e) {
 			} else if(code == 68) { // d
 				input.d = true;
 			}
-            else if(code == 32) { // d
-                input.space = true;
-            }
+      else if(code == 32) { // spacebar
+          input.space = true;
+      }
+      else if(code == 37) { // arrowKeyLeft
+          input.arrowKeyLeft = true;
+      }
+      else if(code == 38) { // arrowKeyUp
+          input.arrowKeyUp = true;
+      }
+      else if(code == 39) { // arrowKeyRight
+          input.arrowKeyRight = true;
+      }
+      else if(code == 40) { // arrowKeyDown
+          input.arrowKeyDown = true;
+      }
 	}
 
 	function doKeyRelease(e) {
@@ -1040,9 +1130,22 @@ function doKeyDown(e) {
 				input.a = false;
 			} else if(code == 68) { // d
 				input.d = false;
-			} else if(code == 32) { // d
+			} else if(code == 32) { // spacebar
                 input.space = false;
-            }
+      }
+      else if(code == 37) { // arrowKeyLeft
+          input.arrowKeyLeft = false;
+      }
+      else if(code == 38) { // arrowKeyUp
+          input.arrowKeyUp = false;
+      }
+      else if(code == 39) { // arrowKeyRight
+          input.arrowKeyRight = false;
+      }
+      else if(code == 40) { // arrowKeyDown
+          input.arrowKeyDown = false;
+      }
+
 
 
 
