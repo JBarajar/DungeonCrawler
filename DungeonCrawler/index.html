@@ -21,7 +21,7 @@ max-width: 100%;
 max-height: 100%;
     margin: auto;
     background-color: white;
-      image-rendering: pixelated;  
+      
 
 
 
@@ -111,6 +111,81 @@ function BoxCollider(width, height) {
 	this.height = height;
 
 	this.checkCollision = function(scene, position) {
+
+		//Get tile id
+		var tileID;
+
+		for(var i = 0; i < scene.tileRenderer.map.layers.length; i++) {
+
+			if(scene.tileRenderer.map.layers[i].type == "tilelayer") {
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor(position.x/16) + scene.tileRenderer.map.width*Math.floor((position.y - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				} 
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor((position.x + this.width)/16) + scene.tileRenderer.map.width*Math.floor((position.y - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor((position.x + this.width)/16) + scene.tileRenderer.map.width*Math.floor((position.y + this.height - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor(position.x/16) + scene.tileRenderer.map.width*Math.floor((position.y + this.height - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+
+
+			}
+
+		}
+		
+
+
+
+
+
+
 
 
 		/*
@@ -751,6 +826,8 @@ function Scene() {
 	this.tileBuffer.height = 1024;
 	this.tileContext = this.tileBuffer.getContext('2d');
 
+	this.tileRenderer = new TileRenderer();
+
 	this.Start = function() {
 
 
@@ -787,7 +864,7 @@ function Scene() {
 
 	}
 
-	this.GameObjects.push(new TileRenderer());
+	this.GameObjects.push(this.tileRenderer);
 	player = new Player();
 	this.GameObjects.push(player);
 
