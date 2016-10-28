@@ -23,8 +23,6 @@ max-height: 100%;
     background-color: white;
       
 
-
-
 }
 
 
@@ -238,7 +236,7 @@ function BoxCollider(width, height) {
 					   this.height + position.y > scene.GameObjects[i].transform.position.y) {
 
 						if(scene.GameObjects[i].onCollide) {
-							scene.GameObjects[i].onCollide();
+							return scene.GameObjects[i].onCollide(scene);
 
 						}
 
@@ -246,9 +244,6 @@ function BoxCollider(width, height) {
 					}
 
 					
-
-					
-
 				}
 
 
@@ -306,8 +301,8 @@ function Enemy(x, y) {
 	this.path;
 	var n = 0;
 	this.playerPos = new Vector2();
-	this.playerPos.x = player.transform.position.x;
-	this.playerPos.y = player.transform.position.y;
+	this.playerPos.x = 0;
+	this.playerPos.y = 0;
 
 	this.Move = function(target,scene) {
 		//Store previous values of X and Y (for collisions)
@@ -318,8 +313,8 @@ function Enemy(x, y) {
 			this.transform.position.y = target.tile.y*16;
 
 			if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
-				this.playerPos.x = player.transform.position.x;
-				this.playerPos.y = player.transform.position.y;
+				this.playerPos.x = scene.player.transform.position.x;
+				this.playerPos.y = scene.player.transform.position.y;
 				this.path = createPath(this,player,scene);
 				if(this.path.length < 2) {
 					n = 0;
@@ -395,8 +390,9 @@ function StaticProp(buffer, x, y) {
 	this.offset.y = -16;
 	this.img = buffer;
 
-	this.onCollide = function() {
-		this.isOpen = 1;
+	this.onCollide = function(scene) {
+
+		return true;
 	}
 
 	this.Start = function(scene) {
@@ -410,7 +406,7 @@ function StaticProp(buffer, x, y) {
 	}
 
 	this.Draw = function(scene) {
-		ctx.drawImage(this.img, 0, 0, 16, 16, Math.floor((this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x)),Math.floor((this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y)), 16, 16);
+		ctx.drawImage(this.img, 0, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 
 
 	}
@@ -469,9 +465,9 @@ function Door(x, y) {
 
 function Player() {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16);
-	this.transform.position.x = 64;
-	this.transform.position.y = 64;
+	this.boxCollider = new BoxCollider(14, 14);
+	this.transform.position.x = 80;
+	this.transform.position.y = 88;
 
 	this.speed = 0.1;
 
@@ -479,6 +475,19 @@ function Player() {
 	this.img = document.getElementById("characters");
 	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
 	this.frame = 0;
+
+	this.prevX = 0;
+	this.prevY = 0;
+
+	this.setPosition = function(x, y) {
+		this.transform.position.x = x;
+		this.transform.position.y = y;
+		this.prevX = x;
+		this.prevY = y;
+
+
+
+	}
 
 
 	this.onCollide = function(scene) {
@@ -496,11 +505,11 @@ function Player() {
 		//console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
 		//console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
 
-		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
+		scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.004);
 
 		//Store previous values of X and Y (for collisions)
-		var prevX = this.transform.position.x;
-		var prevY = this.transform.position.y;
+		this.prevX = this.transform.position.x;
+		this.prevY = this.transform.position.y;
 
 		if(input.w || input.s || input.a || input.d) {
 
@@ -538,10 +547,12 @@ function Player() {
 
 
 			
-			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-				this.transform.position.y = prevY;
+			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
 
-			};
+			} else {
+				this.transform.position.y = this.prevY;
+
+			}
 			
 
 
@@ -578,10 +589,13 @@ function Player() {
 
 
 			
-			if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-				this.transform.position.x = prevX;
+			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
 
-			};
+			} else {
+				this.transform.position.x = this.prevX;
+
+
+			}
 			
 
 			
@@ -610,14 +624,6 @@ function Player() {
 
 
 	}
-
-}
-
-function loadMapData(tileRenderer) {
-
-
-
-	
 
 }
 
@@ -691,8 +697,20 @@ function TileRenderer() {
 
 						imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
 
+						var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
 
-						scene.GameObjects.push(new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y));
+						if(this.map.layers[i].objects[o].properties) {
+							if(this.map.layers[i].objects[o].properties.onCollide) {
+								prop.onCollide = new Function("scene", this.map.layers[i].objects[o].properties.onCollide + "return true;");
+
+
+							}
+
+
+
+						}
+
+						scene.GameObjects.push(prop);
 
 
 
@@ -827,6 +845,7 @@ function Scene() {
 	this.tileContext = this.tileBuffer.getContext('2d');
 
 	this.tileRenderer = new TileRenderer();
+	this.player = new Player();
 
 	this.Start = function() {
 
@@ -865,8 +884,8 @@ function Scene() {
 	}
 
 	this.GameObjects.push(this.tileRenderer);
-	player = new Player();
-	this.GameObjects.push(player);
+	this.player = new Player();
+	this.GameObjects.push(this.player);
 
 
 }
