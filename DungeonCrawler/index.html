@@ -44,6 +44,8 @@ body {
 <div style="display:none;">
 		<img id="basicTiles" src="img/basictiles.png" />
 		<img id="characters" src="img/characters.png" />
+		<img id="charactersRed" src="img/charactersRed.png" />
+		<img id="charactersWhite" src="img/charactersWhite.png" />
 </div>
 	
 </body>
@@ -491,20 +493,51 @@ function Player() {
 
 	this.health = 100;
 	this.img = document.getElementById("characters");
+	this.imgRed = document.getElementById("charactersRed");
+	this.imgWhite = document.getElementById("charactersWhite");
 	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
 	this.frame = 0;
 
 	this.prevX = 0;
 	this.prevY = 0;
 
+	this.knockBack = false;
+	this.kbPos = new Vector2();
+
+	this.invuln = false;
+	this.flash = false;
+	this.flashing = false;
+	this.flashSpeed = 150; //milliseconds
+
+	this.getHit = function(collider) {
+		if(!this.invuln) {
+			if(!this.knockBack) {
+				this.knockBack = true;
+				this.health = this.health - collider.damage;
+				this.kbPos.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
+	            this.kbPos.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
+			}
+		}
+	}
+
+	this.resetInvuln = function() {
+		this.invuln = false;
+	}
+
+	this.setFlash = function() {
+		if(this.flash) {
+            this.flash = false;
+        }
+        else {this.flash = true;}
+        if(this.invuln) setTimeout(this.setFlash.bind(this), this.flashSpeed);
+        else this.flashing = false;
+	}
+
 	this.setPosition = function(x, y) {
 		this.transform.position.x = x;
 		this.transform.position.y = y;
 		this.prevX = x;
 		this.prevY = y;
-
-
-
 	}
 
 
@@ -518,7 +551,7 @@ function Player() {
 				return true;
 			}
 			if(collider.type == "Enemy") {
-				//console.log("Hit Enemy");
+				this.getHit(collider);
 			}
 		}
 	}
@@ -539,103 +572,130 @@ function Player() {
 		this.prevX = this.transform.position.x;
 		this.prevY = this.transform.position.y;
 
-		if(input.w || input.s || input.a || input.d) {
+		//KnockBack
+		if(this.knockBack) {
+			this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.y = this.prevY;
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.x = this.prevX;
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
 
-			this.frame += scene.deltaTime*0.01;
-			this.frame = this.frame % 3;
-
+            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
 		}
 
+		//Move Normaally
+		else {
 
-		if(input.w || input.s) {
-			if(input.w) {
-				this.transform.position.y -= (scene.deltaTime * this.speed);
-				this.facing = 3; //Up
+			if(input.w || input.s || input.a || input.d) {
 
-
-
-			}
-
-			if(input.s) {
-				this.transform.position.y += (scene.deltaTime * this.speed);
-				this.facing = 0; //Down
+				this.frame += scene.deltaTime*0.01;
+				this.frame = this.frame % 3;
 
 			}
 
-			/*
 
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.y = prevY;
-
-				}
-			}
-			*/
+			if(input.w || input.s) {
+				if(input.w) {
+					this.transform.position.y -= (scene.deltaTime * this.speed);
+					this.facing = 3; //Up
 
 
-			
-			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-			} else {
-				this.transform.position.y = this.prevY;
-
-			}
-			
-
-
-		}
-
-
-		
-
-		if(input.a || input.d) {
-			if(input.a) {
-				this.transform.position.x -= (scene.deltaTime * this.speed);
-				this.facing = 1; //Left
-
-			}
-
-			if(input.d) {
-				this.transform.position.x += (scene.deltaTime * this.speed);
-				this.facing = 2; //Right
-
-			}
-
-			/*
-
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.x = prevX;
 
 				}
 
+				if(input.s) {
+					this.transform.position.y += (scene.deltaTime * this.speed);
+					this.facing = 0; //Down
+
+				}
+
+				/*
+
+				// Check collisions based on current tile (Scene.tiles[y][x])
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+					if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+					this.transform.position.y = prevY;
+
+					}
+				}
+				*/
+
+
+				
+				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+				} else {
+					this.transform.position.y = this.prevY;
+
+				}
+				
+
+
 			}
 
-			*/
-
 
 			
-			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
 
-			} else {
-				this.transform.position.x = this.prevX;
+			if(input.a || input.d) {
+				if(input.a) {
+					this.transform.position.x -= (scene.deltaTime * this.speed);
+					this.facing = 1; //Left
 
+				}
+
+				if(input.d) {
+					this.transform.position.x += (scene.deltaTime * this.speed);
+					this.facing = 2; //Right
+
+				}
+
+				/*
+
+				// Check collisions based on current tile (Scene.tiles[y][x])
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+					if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+					this.transform.position.x = prevX;
+
+					}
+
+				}
+
+				*/
+
+
+				
+				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+				} else {
+					this.transform.position.x = this.prevX;
+
+
+				}
+				
+
+				
 
 			}
-			
 
-			
+			//idle collision check
+			if(!input.w && !input.s && !input.a && !input.d) {
+				this.boxCollider.checkCollision(scene, this.transform.position)
+			}
 
 		}
-
-		//idle collision check
-		if(!input.w && !input.s && !input.a && !input.d) {
-			this.boxCollider.checkCollision(scene, this.transform.position)
-		}
-
-		
 
 		
 
@@ -647,10 +707,36 @@ function Player() {
 	this.Draw = function(scene) {
 
 		 ctx.fillStyle = "#000000";
-
 		 //ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
 
-		 ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 if(this.health > 0) {
+		 	ctx.fillStyle = "red";
+		 	ctx.fillRect(10,10,this.health,10);
+		 }
+
+		 //Draw KnockBack Sprite
+		 if(this.knockBack) {
+		 	ctx.drawImage(this.imgRed, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 }
+
+		 //Draw invulnverable sprite 
+		 else if(this.invuln) {
+		 	if(!this.flashing) {
+			 	this.flashing = true;
+			 	this.flash = true;
+			 	setTimeout(this.setFlash.bind(this), this.flashSpeed);
+			 }
+
+			 if(this.flash) {
+			 	ctx.drawImage(this.imgWhite, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+			 }
+			 else ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 }
+		 
+		 //Draw Normally
+		 else {
+		 	ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 } 
 
 
 		 //ctx.fillStyle = "red";
