@@ -104,10 +104,10 @@ function Transform() {
 }
 
 
-function BoxCollider(width, height) {
+function BoxCollider(width, height, parent) {
 
 	this.offset = new Vector2();
-
+	this.parent = parent;
 	this.width = width;
 	this.height = height;
 
@@ -238,9 +238,13 @@ function BoxCollider(width, height) {
 					   position.y < scene.GameObjects[i].transform.position.y + scene.GameObjects[i].boxCollider.height &&
 					   this.height + position.y > scene.GameObjects[i].transform.position.y) {
 
-						if(scene.GameObjects[i].onCollide) {
+						/*if(scene.GameObjects[i].onCollide) {
 							return scene.GameObjects[i].onCollide(scene);
 
+						}*/
+
+						if(this.parent.onCollide) {
+							return this.parent.onCollide(scene, scene.GameObjects[i]);
 						}
 
 						return true;
@@ -292,39 +296,47 @@ function Key() {
 
 }
 
-
 function Enemy(x, y) {
 	this.type = "Enemy";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(15, 15);
+	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
 	this.speed = getRandomArbitrary(0.07, 0.1);
+    this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
 	var n = 0;
 	this.playerPos = new Vector2();
-	this.playerPos.x = 0;
-	this.playerPos.y = 0;
+	this.playerPos.x;
+	this.playerPos.y;
+    var prevX = this.transform.position.x;
+    var prevY = this.transform.position.y;
+    var tO = 8;
+
+    this.refreshPath = function(scene) {
+        this.playerPos.x = scene.player.transform.position.x+tO;
+        this.playerPos.y = scene.player.transform.position.y+tO;
+        this.path = createPath(this,scene.player,scene);
+                
+        if(this.path.length < 2) {
+            n = 0;
+        } 
+        else {
+            n = 1;
+        } 
+    }
 
 	this.Move = function(target,scene) {
 		//Store previous values of X and Y (for collisions)
-		var prevX = this.transform.position.x;
-		var prevY = this.transform.position.y;
+		prevX = this.transform.position.x;
+		prevY = this.transform.position.y;
 		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
-			if(Math.floor(this.playerPos.x/16) != Math.floor(player.transform.position.x/16) || Math.floor(this.playerPos.y/16) != Math.floor(player.transform.position.y/16)) {
-				this.playerPos.x = scene.player.transform.position.x;
-				this.playerPos.y = scene.player.transform.position.y;
-				this.path = createPath(this,player,scene);
-				if(this.path.length < 2) {
-					n = 0;
-				} 
-				else {
-					n = 1;
-				} 
+			if(Math.floor(this.playerPos.x/16) != Math.floor((scene.player.transform.position.x+tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((scene.player.transform.position.y+tO)/16)) {
+				this.refreshPath(scene);
 			}
 
 			else if(n < this.path.length-1) {
@@ -344,22 +356,24 @@ function Enemy(x, y) {
 		}
 	}
 
-	this.onCollide = function() {
-		
-
+	this.onCollide = function(scene, collider) {
+		if(collider.type = "Enemy") {
+			//return true;
+		}
 	}
 
 	this.Start = function(scene) {
-		this.path = createPath(this,player,scene);
+		this.playerPos.x = scene.player.transform.position.x+tO;
+		this.playerPos.y = scene.player.transform.position.y+tO;
+		this.path = createPath(this,scene.player,scene);
 
 	}
 
 	this.Update = function(scene) {
 		
-
 		this.Move(this.path[n],scene);
-
-	}
+        
+    }
 
 	this.Draw = function(scene) {
 
@@ -371,10 +385,9 @@ function Enemy(x, y) {
 		/*
 		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 		*/
-
 		ctx.fillStyle = "green";
 
-		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
 
 
 	}
@@ -384,7 +397,8 @@ function Enemy(x, y) {
 
 function StaticProp(buffer, x, y) {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16);
+	this.type = "StaticProp";
+	this.boxCollider = new BoxCollider(16, 16, this);
 	this.transform.position.x = x;
 	this.transform.position.y = y;
 
@@ -393,7 +407,7 @@ function StaticProp(buffer, x, y) {
 	this.offset.y = -16;
 	this.img = buffer;
 
-	this.onCollide = function(scene) {
+	this.onCollide = function(scene, collider) {
 
 		return true;
 	}
@@ -420,7 +434,7 @@ function StaticProp(buffer, x, y) {
 function Chest(x, y) {
 	this.type = "Chest";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16);
+	this.boxCollider = new BoxCollider(16, 16, this);
 	this.transform.position.x = x;
 	this.transform.position.y = y;
 	this.img = document.getElementById("chest");
@@ -429,8 +443,8 @@ function Chest(x, y) {
 
 	this.isOpen = 0;
 
-	this.onCollide = function() {
-		this.isOpen = 1;
+	this.onCollide = function(scene, collider) {
+		//this.isOpen = 1;
 
 	}
 
@@ -468,7 +482,8 @@ function Door(x, y) {
 
 function Player() {
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(14, 14);
+	this.type = "Player";
+	this.boxCollider = new BoxCollider(14, 14, this);
 	this.transform.position.x = 80;
 	this.transform.position.y = 88;
 
@@ -493,9 +508,19 @@ function Player() {
 	}
 
 
-	this.onCollide = function(scene) {
-
-
+	this.onCollide = function(scene, collider) {
+		if(collider.type) {
+			if(collider.type == "StaticProp") {
+				collider.onCollide(scene, this);
+			}
+			if(collider.type == "Chest") {
+				collider.isOpen = 1;
+				return true;
+			}
+			if(collider.type == "Enemy") {
+				//console.log("Hit Enemy");
+			}
+		}
 	}
 
 	this.Start = function(scene) {
@@ -605,6 +630,11 @@ function Player() {
 
 		}
 
+		//idle collision check
+		if(!input.w && !input.s && !input.a && !input.d) {
+			this.boxCollider.checkCollision(scene, this.transform.position)
+		}
+
 		
 
 		
@@ -661,7 +691,7 @@ function TileRenderer() {
 
 		console.log("after map load");
 
-		this.map = mapData;
+		this.map = JSON.parse(mapData);
 
 		this.tileBuffer.width = this.map.width * 16;
 		this.tileBuffer.height = this.map.height * 16;
@@ -889,6 +919,7 @@ function Scene() {
 	this.GameObjects.push(this.tileRenderer);
 	this.player = new Player();
 	this.GameObjects.push(this.player);
+	this.GameObjects.push(new Enemy(7,7));
 
 
 }
@@ -953,31 +984,33 @@ function findObjects(scene, type) {
 }
 
 function createPath(a , b, scene) {
+	var tO = 8;
 	var map = new Array();
-	map = scene.tiles;
+	map = scene.tileRenderer.map;
 	var openList = new Array();
 	var closedList = new Array();
 	var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
 	var curr = start;
-
-	var target = new Tile(b.transform.position.x, b.transform.position.y);
+	var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
 	var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
 	this.addAdjTile = function(x,y) {
-		if(map[y][x] == 1) {
+		var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
+		if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
 			tempTile = new Tile(0,0,0);
 			tempTile.tile.x = x;
 			tempTile.tile.y = y;
 			tempTile.parent = curr;
 			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList) && !inList(tempTile, objList)) {
+			if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
+			if(!inList(tempTile, closedList) && (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid)) {
 				if(inList(tempTile, openList)) {
-					var i = 0;
+					/*var i = 0;
 					for(i = 0; i < openList.length-1;i++) {
 						if(tempTile.tile.x == openList[i].tile.x && tempTile.tile.y == openList[i].tile.y) {
 
 						}
-					}
+					}*/
 				}
 				else {
 					openList.push(tempTile);
