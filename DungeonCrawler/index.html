@@ -709,10 +709,7 @@ function Player() {
 		 ctx.fillStyle = "#000000";
 		 //ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
 
-		 if(this.health > 0) {
-		 	ctx.fillStyle = "red";
-		 	ctx.fillRect(10,10,this.health,10);
-		 }
+		 
 
 		 //Draw KnockBack Sprite
 		 if(this.knockBack) {
@@ -1000,6 +997,11 @@ function Scene() {
 			this.GameObjects[i].Draw(this);
 		}
 
+		//Draw Health (Above other Objects)
+			if(this.player.health > 0) {
+			 	ctx.fillStyle = "red";
+			 	ctx.fillRect(10,10,this.player.health,8);
+			}
 	}
 
 	this.GameObjects.push(this.tileRenderer);
