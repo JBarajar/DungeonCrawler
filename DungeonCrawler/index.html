@@ -304,11 +304,11 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = getRandomArbitrary(0.07, 0.1);
+	this.speed = 0.6; //DO NOT SET TO NUMBERS THAT DIVIDE EVENLY INTO 1!! //getRandomArbitrary(0.07, 0.1);
     this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
-	var n = 0;
+	this.n = 0;
 	this.playerPos = new Vector2();
 	this.playerPos.x;
 	this.playerPos.y;
@@ -316,16 +316,19 @@ function Enemy(x, y) {
     var prevY = this.transform.position.y;
     var tO = 8;
 
+    this.smoothMove = true; //FALSE IS BUGGED DONT USE YET
+    this.drawPath = true;
+
     this.refreshPath = function(scene) {
         this.playerPos.x = scene.player.transform.position.x+tO;
         this.playerPos.y = scene.player.transform.position.y+tO;
         this.path = createPath(this,scene.player,scene);
                 
         if(this.path.length < 2) {
-            n = 0;
+            this.n = 0;
         } 
         else {
-            n = 1;
+            this.n = 1;
         } 
     }
 
@@ -341,17 +344,25 @@ function Enemy(x, y) {
 				this.refreshPath(scene);
 			}
 
-			else if(n < this.path.length-1) {
-				n++;
+			else if(this.n < this.path.length-1) {
+				this.n++;
 			}
 			
-		} 
-		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
+		}
+        if(!this.smoothMove) this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed);
+    	else {
+            if(target.tile.x*16 - this.transform.position.x >= 0) this.transform.position.x += this.speed;
+            else this.transform.position.x -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
 
 		}
-		this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed)
+		if(!this.smoothMove) this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed);
+        else { 
+            if(target.tile.y*16 - this.transform.position.y >= 0) this.transform.position.y += this.speed;
+            else this.transform.position.y -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.y = prevY;
 
@@ -373,7 +384,7 @@ function Enemy(x, y) {
 
 	this.Update = function(scene) {
 		
-		this.Move(this.path[n],scene);
+		this.Move(this.path[this.n],scene);
         
     }
 
@@ -387,10 +398,22 @@ function Enemy(x, y) {
 		/*
 		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 		*/
+
+        if(this.drawPath) {
+            ctx.fillStyle = "white";
+            for(var i = 0; i < this.path.length; i++) {
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16 - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+                ctx.globalAlpha = 1.0;
+                ctx.fillText(i, Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16+8 - scene.Camera.transform.position.y + scene.Camera.offset.y));
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
 		ctx.fillStyle = "green";
 
 		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
-
+        
 
 	}
 
@@ -1007,7 +1030,9 @@ function Scene() {
 	this.GameObjects.push(this.tileRenderer);
 	this.player = new Player();
 	this.GameObjects.push(this.player);
-	this.GameObjects.push(new Enemy(7,7));
+    this.enemy = new Enemy(7,7);
+    this.GameObjects.push(this.enemy);
+	//this.GameObjects.push(new Enemy(7,7));
 
 
 }
@@ -1027,8 +1052,8 @@ function Tile(x, y, cost) {
 	this.getTile = function(n) {
 		return Math.floor(n/16);
 	}
-	this.getCost = function(s, end) {
-		this.g = this.parent.g + 1;
+	this.getCost = function(s, end, mcost) {
+		this.g = this.parent.g + mcost;
 		this.h = Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y)
 		return this.g + this.h;
 	}
@@ -1082,14 +1107,15 @@ function createPath(a , b, scene) {
 	var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
 	var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
-	this.addAdjTile = function(x,y) {
+
+	this.addAdjTile = function(x,y,mcost) {
 		var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
 		if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
 			tempTile = new Tile(0,0,0);
 			tempTile.tile.x = x;
 			tempTile.tile.y = y;
 			tempTile.parent = curr;
-			tempTile.cost = tempTile.getCost(start,target);
+			tempTile.cost = tempTile.getCost(start,target,mcost);
 			if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
 			if(!inList(tempTile, closedList) && (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid)) {
 				if(inList(tempTile, openList)) {
@@ -1112,13 +1138,21 @@ function createPath(a , b, scene) {
 	//for(var ind = 0; ind < 7; ind++) {
 		closedList.push(curr);
 		//left tile
-		this.addAdjTile(curr.tile.x-1,curr.tile.y);
+		this.addAdjTile(curr.tile.x-1,curr.tile.y,10);
 		//right tile
-		this.addAdjTile(curr.tile.x+1,curr.tile.y);
+		this.addAdjTile(curr.tile.x+1,curr.tile.y,10);
 		//top tile
-		this.addAdjTile(curr.tile.x,curr.tile.y-1);
+		this.addAdjTile(curr.tile.x,curr.tile.y-1,10);
 		//bottom tile
-		this.addAdjTile(curr.tile.x,curr.tile.y+1);
+		this.addAdjTile(curr.tile.x,curr.tile.y+1,10);
+        //Top left
+        this.addAdjTile(curr.tile.x-1,curr.tile.y-1,14);
+        //Top right
+        this.addAdjTile(curr.tile.x+1,curr.tile.y-1,14);
+        //Bot left
+        this.addAdjTile(curr.tile.x-1,curr.tile.y+1,14);
+        //Bot right
+        this.addAdjTile(curr.tile.x+1,curr.tile.y+1,14);
 		tempTile = new Tile(0,0,0);
 		var index = openList.length-1;
 		tempTile = openList[index];
