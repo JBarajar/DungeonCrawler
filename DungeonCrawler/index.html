@@ -321,6 +321,10 @@ function Enemy(x, y) {
     var prevY = this.transform.position.y;
     var tO = 8;
 
+    this.img = this.img = document.getElementById("characters");
+    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+    this.frame = 0;
+
     this.drawPath = true;
 
     this.refreshPath = function(scene) {
@@ -355,8 +359,8 @@ function Enemy(x, y) {
 		}
         if(!this.smoothMove) this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed);
     	else {
-            if(target.tile.x*16 - this.transform.position.x >= 0) this.transform.position.x += this.speed;
-            else this.transform.position.x -= this.speed;
+            if(target.tile.x*16 - this.transform.position.x > 0) this.transform.position.x += this.speed;
+            else if(target.tile.x*16 - this.transform.position.x < 0) this.transform.position.x -= this.speed;
         }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
@@ -364,14 +368,31 @@ function Enemy(x, y) {
 		}
 		if(!this.smoothMove) this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed);
         else { 
-            if(target.tile.y*16 - this.transform.position.y >= 0) this.transform.position.y += this.speed;
-            else this.transform.position.y -= this.speed;
+            if(target.tile.y*16 - this.transform.position.y > 0) this.transform.position.y += this.speed;
+            else if(target.tile.y*16 - this.transform.position.y < 0)this.transform.position.y -= this.speed;
         }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.y = prevY;
 
 		}
 	}
+
+    this.setFacing = function() {
+        if(this.transform.position.y - prevY > 0) {
+            this.facing = 0;
+        }
+        else if(this.transform.position.y - prevY < 0){
+            this.facing = 3;
+        }
+
+        if(this.transform.position.x - prevX > 0) {
+            this.facing = 2;
+        }
+        else if(this.transform.position.x - prevX < 0){
+            this.facing = 1;
+        }
+
+    }
 
 	this.onCollide = function(scene, collider) {
 		if(collider.type = "Enemy") {
@@ -388,7 +409,12 @@ function Enemy(x, y) {
 
 	this.Update = function(scene) {
 		
+        this.frame += scene.deltaTime*0.01;
+        this.frame = this.frame % 3;
 		this.Move(this.path[this.n],scene);
+        this.setFacing();
+
+
         
     }
 
@@ -416,7 +442,9 @@ function Enemy(x, y) {
 
 		ctx.fillStyle = "green";
 
-		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+		//ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+
+        ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         
 
 	}
@@ -547,6 +575,10 @@ function Player() {
 		}
 	}
 
+    this.die = function() {
+
+    }
+
 	this.resetInvuln = function() {
 		this.invuln = false;
 	}
@@ -599,6 +631,10 @@ function Player() {
 		this.prevX = this.transform.position.x;
 		this.prevY = this.transform.position.y;
 
+        if(this.health <= 0) {
+                this.die();
+        }
+
 		//KnockBack
 		if(this.knockBack) {
 			this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
@@ -632,6 +668,10 @@ function Player() {
 				this.frame = this.frame % 3;
 
 			}
+            //Return to standing position if idle
+            else {
+                this.frame = 1;
+            }
 
 
 			if(input.w || input.s) {
@@ -1047,7 +1087,6 @@ function mainLoop() {
 	Scene.Update();
 	Scene.Draw();
 
-
 	requestAnimationFrame(mainLoop);
 
 }
@@ -1163,13 +1202,17 @@ function createPath(a , b, scene) {
 		//bottom tile
 		this.addAdjTile(curr.tile.x,curr.tile.y+1,10);
         //Top left
-        this.addAdjTile(curr.tile.x-1,curr.tile.y-1,14);
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y-1,14);
         //Top right
-        this.addAdjTile(curr.tile.x+1,curr.tile.y-1,14);
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y-1,14);
         //Bot left
-        this.addAdjTile(curr.tile.x-1,curr.tile.y+1,14);
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y+1,14);
         //Bot right
-        this.addAdjTile(curr.tile.x+1,curr.tile.y+1,14);
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y+1,14);
 		tempTile = new Tile(0,0,0);
 		var index = openList.length-1;
 		tempTile = openList[index];
