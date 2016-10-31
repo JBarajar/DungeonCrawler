@@ -8,6 +8,8 @@
 
 <style type="text/css">
 
+@font-face { font-family: Pixel; src: url('fonts/Pixeled.ttf'); } 
+
 body {
 	width: 100%;
 	height: 100%;
@@ -44,6 +46,8 @@ body {
 <div style="display:none;">
 		<img id="basicTiles" src="img/basictiles.png" />
 		<img id="characters" src="img/characters.png" />
+		<img id="charactersRed" src="img/charactersRed.png" />
+		<img id="charactersWhite" src="img/charactersWhite.png" />
 </div>
 	
 </body>
@@ -69,6 +73,8 @@ var startTime = new Date();
 var endTime = new Date();
 
 var tileImage;
+
+var draw = true;
 
 
 document.addEventListener('keydown',doKeyDown,false);
@@ -302,11 +308,16 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = getRandomArbitrary(0.07, 0.1);
+
+    this.smoothMove = true;
+    //DONT SET SPEED HIGHER THAN 1.0
+    if(this.smoothMove) this.speed = 0.8;
+    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
+
     this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
-	var n = 0;
+	this.n = 0;
 	this.playerPos = new Vector2();
 	this.playerPos.x;
 	this.playerPos.y;
@@ -314,16 +325,22 @@ function Enemy(x, y) {
     var prevY = this.transform.position.y;
     var tO = 8;
 
+    this.img = this.img = document.getElementById("characters");
+    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+    this.frame = 0;
+
+    this.drawPath = false;
+
     this.refreshPath = function(scene) {
         this.playerPos.x = scene.player.transform.position.x+tO;
         this.playerPos.y = scene.player.transform.position.y+tO;
         this.path = createPath(this,scene.player,scene);
                 
         if(this.path.length < 2) {
-            n = 0;
+            this.n = 0;
         } 
         else {
-            n = 1;
+            this.n = 1;
         } 
     }
 
@@ -331,7 +348,7 @@ function Enemy(x, y) {
 		//Store previous values of X and Y (for collisions)
 		prevX = this.transform.position.x;
 		prevY = this.transform.position.y;
-		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
+		if(Math.abs(this.transform.position.x - target.tile.x*16) < 1.0 && Math.abs(this.transform.position.y - target.tile.y*16) < 1.0) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
@@ -339,22 +356,47 @@ function Enemy(x, y) {
 				this.refreshPath(scene);
 			}
 
-			else if(n < this.path.length-1) {
-				n++;
+			else if(this.n < this.path.length-1) {
+				this.n++;
 			}
 			
-		} 
-		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
+		}
+        if(!this.smoothMove) this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed);
+    	else {
+            if(target.tile.x*16 - this.transform.position.x > 0) this.transform.position.x += this.speed;
+            else if(target.tile.x*16 - this.transform.position.x < 0) this.transform.position.x -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
 
 		}
-		this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed)
+		if(!this.smoothMove) this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed);
+        else { 
+            if(target.tile.y*16 - this.transform.position.y > 0) this.transform.position.y += this.speed;
+            else if(target.tile.y*16 - this.transform.position.y < 0)this.transform.position.y -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.y = prevY;
 
 		}
 	}
+
+    this.setFacing = function() {
+        if(this.transform.position.y - prevY > 0) {
+            this.facing = 0;
+        }
+        else if(this.transform.position.y - prevY < 0){
+            this.facing = 3;
+        }
+
+        if(this.transform.position.x - prevX > 0) {
+            this.facing = 2;
+        }
+        else if(this.transform.position.x - prevX < 0){
+            this.facing = 1;
+        }
+
+    }
 
 	this.onCollide = function(scene, collider) {
 		if(collider.type = "Enemy") {
@@ -371,7 +413,12 @@ function Enemy(x, y) {
 
 	this.Update = function(scene) {
 		
-		this.Move(this.path[n],scene);
+        this.frame += scene.deltaTime*0.01;
+        this.frame = this.frame % 3;
+		this.Move(this.path[this.n],scene);
+        this.setFacing();
+
+
         
     }
 
@@ -385,10 +432,24 @@ function Enemy(x, y) {
 		/*
 		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 		*/
+
+        if(this.drawPath) {
+            ctx.fillStyle = "white";
+            for(var i = 0; i < this.path.length; i++) {
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16 - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+                ctx.globalAlpha = 1.0;
+                ctx.fillText(i, Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16+8 - scene.Camera.transform.position.y + scene.Camera.offset.y));
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
 		ctx.fillStyle = "green";
 
-		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+		//ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
 
+        ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        
 
 	}
 
@@ -491,20 +552,55 @@ function Player() {
 
 	this.health = 100;
 	this.img = document.getElementById("characters");
+	this.imgRed = document.getElementById("charactersRed");
+	this.imgWhite = document.getElementById("charactersWhite");
 	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
 	this.frame = 0;
 
 	this.prevX = 0;
 	this.prevY = 0;
 
+	this.knockBack = false;
+	this.kbPos = new Vector2();
+
+	this.invuln = false;
+	this.flash = false;
+	this.flashing = false;
+	this.flashSpeed = 150; //milliseconds
+
+	this.getHit = function(collider) {
+		if(!this.invuln) {
+			if(!this.knockBack) {
+				this.knockBack = true;
+				this.health = this.health - collider.damage;
+				this.kbPos.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
+	            this.kbPos.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
+			}
+		}
+	}
+
+    this.die = function() {
+
+    }
+
+	this.resetInvuln = function() {
+		this.invuln = false;
+	}
+
+	this.setFlash = function() {
+		if(this.flash) {
+            this.flash = false;
+        }
+        else {this.flash = true;}
+        if(this.invuln) setTimeout(this.setFlash.bind(this), this.flashSpeed);
+        else this.flashing = false;
+	}
+
 	this.setPosition = function(x, y) {
 		this.transform.position.x = x;
 		this.transform.position.y = y;
 		this.prevX = x;
 		this.prevY = y;
-
-
-
 	}
 
 
@@ -518,7 +614,7 @@ function Player() {
 				return true;
 			}
 			if(collider.type == "Enemy") {
-				//console.log("Hit Enemy");
+				this.getHit(collider);
 			}
 		}
 	}
@@ -539,103 +635,138 @@ function Player() {
 		this.prevX = this.transform.position.x;
 		this.prevY = this.transform.position.y;
 
-		if(input.w || input.s || input.a || input.d) {
+        if(this.health <= 0) {
+                this.die();
+        }
 
-			this.frame += scene.deltaTime*0.01;
-			this.frame = this.frame % 3;
+		//KnockBack
+		if(this.knockBack) {
+			this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.y = this.prevY;
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, this.speed);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.x = this.prevX;
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
 
+            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
+                this.knockBack = false;
+                this.invuln = true;
+				setTimeout(this.resetInvuln.bind(this), 1000);
+            }
 		}
 
+		//Move Normaally
+		else {
 
-		if(input.w || input.s) {
-			if(input.w) {
-				this.transform.position.y -= (scene.deltaTime * this.speed);
-				this.facing = 3; //Up
+			if(input.w || input.s || input.a || input.d) {
 
-
-
-			}
-
-			if(input.s) {
-				this.transform.position.y += (scene.deltaTime * this.speed);
-				this.facing = 0; //Down
+				this.frame += scene.deltaTime*0.01;
+				this.frame = this.frame % 3;
 
 			}
-
-			/*
-
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.y = prevY;
-
-				}
-			}
-			*/
+            //Return to standing position if idle
+            else {
+                this.frame = 1;
+            }
 
 
-			
-			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-			} else {
-				this.transform.position.y = this.prevY;
-
-			}
-			
+			if(input.w || input.s) {
+				if(input.w) {
+					this.transform.position.y -= (scene.deltaTime * this.speed);
+					this.facing = 3; //Up
 
 
-		}
-
-
-		
-
-		if(input.a || input.d) {
-			if(input.a) {
-				this.transform.position.x -= (scene.deltaTime * this.speed);
-				this.facing = 1; //Left
-
-			}
-
-			if(input.d) {
-				this.transform.position.x += (scene.deltaTime * this.speed);
-				this.facing = 2; //Right
-
-			}
-
-			/*
-
-			// Check collisions based on current tile (Scene.tiles[y][x])
-			if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-				this.transform.position.x = prevX;
 
 				}
 
+				if(input.s) {
+					this.transform.position.y += (scene.deltaTime * this.speed);
+					this.facing = 0; //Down
+
+				}
+
+				/*
+
+				// Check collisions based on current tile (Scene.tiles[y][x])
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+					if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+					this.transform.position.y = prevY;
+
+					}
+				}
+				*/
+
+
+				
+				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+				} else {
+					this.transform.position.y = this.prevY;
+
+				}
+				
+
+
 			}
 
-			*/
-
 
 			
-			if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
 
-			} else {
-				this.transform.position.x = this.prevX;
+			if(input.a || input.d) {
+				if(input.a) {
+					this.transform.position.x -= (scene.deltaTime * this.speed);
+					this.facing = 1; //Left
 
+				}
+
+				if(input.d) {
+					this.transform.position.x += (scene.deltaTime * this.speed);
+					this.facing = 2; //Right
+
+				}
+
+				/*
+
+				// Check collisions based on current tile (Scene.tiles[y][x])
+				if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+					if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+					this.transform.position.x = prevX;
+
+					}
+
+				}
+
+				*/
+
+
+				
+				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+				} else {
+					this.transform.position.x = this.prevX;
+
+
+				}
+				
+
+				
 
 			}
-			
 
-			
+			//idle collision check
+			if(!input.w && !input.s && !input.a && !input.d) {
+				this.boxCollider.checkCollision(scene, this.transform.position)
+			}
 
 		}
-
-		//idle collision check
-		if(!input.w && !input.s && !input.a && !input.d) {
-			this.boxCollider.checkCollision(scene, this.transform.position)
-		}
-
-		
 
 		
 
@@ -647,10 +778,33 @@ function Player() {
 	this.Draw = function(scene) {
 
 		 ctx.fillStyle = "#000000";
-
 		 //ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
 
-		 ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 
+
+		 //Draw KnockBack Sprite
+		 if(this.knockBack) {
+		 	ctx.drawImage(this.imgRed, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 }
+
+		 //Draw invulnverable sprite 
+		 else if(this.invuln) {
+		 	if(!this.flashing) {
+			 	this.flashing = true;
+			 	this.flash = true;
+			 	setTimeout(this.setFlash.bind(this), this.flashSpeed);
+			 }
+
+			 if(this.flash) {
+			 	ctx.drawImage(this.imgWhite, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+			 }
+			 else ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 }
+		 
+		 //Draw Normally
+		 else {
+		 	ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 } 
 
 
 		 //ctx.fillStyle = "red";
@@ -914,12 +1068,19 @@ function Scene() {
 			this.GameObjects[i].Draw(this);
 		}
 
+		//Draw Health (Above other Objects)
+			if(this.player.health > 0) {
+			 	ctx.fillStyle = "red";
+			 	ctx.fillRect(10,10,this.player.health,8);
+			}
 	}
 
 	this.GameObjects.push(this.tileRenderer);
 	this.player = new Player();
 	this.GameObjects.push(this.player);
-	this.GameObjects.push(new Enemy(7,7));
+    this.enemy = new Enemy(7,7);
+    this.GameObjects.push(this.enemy);
+	//this.GameObjects.push(new Enemy(7,7));
 
 
 }
@@ -928,8 +1089,7 @@ function Scene() {
 function mainLoop() {
 
 	Scene.Update();
-	Scene.Draw();
-
+    if(draw) Scene.Draw();
 
 	requestAnimationFrame(mainLoop);
 
@@ -939,8 +1099,8 @@ function Tile(x, y, cost) {
 	this.getTile = function(n) {
 		return Math.floor(n/16);
 	}
-	this.getCost = function(s, end) {
-		this.g = this.parent.g + 1;
+	this.getCost = function(s, end, mcost) {
+		this.g = this.parent.g + mcost;
 		this.h = Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y)
 		return this.g + this.h;
 	}
@@ -994,14 +1154,28 @@ function createPath(a , b, scene) {
 	var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
 	var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
-	this.addAdjTile = function(x,y) {
+
+    this.checkTile = function(x,y) {
+        var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
+        if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+            if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
+            if (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+                return false;
+            }
+            
+        }
+        return true;
+    }
+
+
+	this.addAdjTile = function(x,y,mcost) {
 		var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
 		if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
 			tempTile = new Tile(0,0,0);
 			tempTile.tile.x = x;
 			tempTile.tile.y = y;
 			tempTile.parent = curr;
-			tempTile.cost = tempTile.getCost(start,target);
+			tempTile.cost = tempTile.getCost(start,target,mcost);
 			if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
 			if(!inList(tempTile, closedList) && (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid)) {
 				if(inList(tempTile, openList)) {
@@ -1024,13 +1198,25 @@ function createPath(a , b, scene) {
 	//for(var ind = 0; ind < 7; ind++) {
 		closedList.push(curr);
 		//left tile
-		this.addAdjTile(curr.tile.x-1,curr.tile.y);
+		this.addAdjTile(curr.tile.x-1,curr.tile.y,10);
 		//right tile
-		this.addAdjTile(curr.tile.x+1,curr.tile.y);
+		this.addAdjTile(curr.tile.x+1,curr.tile.y,10);
 		//top tile
-		this.addAdjTile(curr.tile.x,curr.tile.y-1);
+		this.addAdjTile(curr.tile.x,curr.tile.y-1,10);
 		//bottom tile
-		this.addAdjTile(curr.tile.x,curr.tile.y+1);
+		this.addAdjTile(curr.tile.x,curr.tile.y+1,10);
+        //Top left
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y-1,14);
+        //Top right
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y-1,14);
+        //Bot left
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y+1,14);
+        //Bot right
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y+1,14);
 		tempTile = new Tile(0,0,0);
 		var index = openList.length-1;
 		tempTile = openList[index];
@@ -1058,9 +1244,57 @@ function createPath(a , b, scene) {
 		c = new Tile();
 		c = list[list.length-1].parent;
 	}
-	list.reverse();
+	//list.reverse();
+    var path = new Array();
+    for(var i = list.length-1; i >= 0; i--) {
+        path.push(list[i]);
+        if(i > 0 && list[i].tile.x != list[i-1].tile.x && list[i].tile.y != list[i-1].tile.y) {
+            //right side
+            if(list[i-1].tile.x - list[i].tile.x > 0) {
+                //right down
+                if(list[i-1].tile.y - list[i].tile.y >= 0) {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //right up
+                else {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+            //left side
+            else {
+                //left down
+                if(list[i-1].tile.y - list[i].tile.y > 0) {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //left up
+                else {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+        }
+    }
 
-	return list;
+	return path;
 }
 
 
