@@ -304,7 +304,12 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = 0.6; //DO NOT SET TO NUMBERS THAT DIVIDE EVENLY INTO 1!! //getRandomArbitrary(0.07, 0.1);
+
+    this.smoothMove = true;
+    //DONT SET SPEED HIGHER THAN 1.0
+    if(this.smoothMove) this.speed = 0.8;
+    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
+
     this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
@@ -316,7 +321,6 @@ function Enemy(x, y) {
     var prevY = this.transform.position.y;
     var tO = 8;
 
-    this.smoothMove = true; //FALSE IS BUGGED DONT USE YET
     this.drawPath = true;
 
     this.refreshPath = function(scene) {
@@ -336,7 +340,7 @@ function Enemy(x, y) {
 		//Store previous values of X and Y (for collisions)
 		prevX = this.transform.position.x;
 		prevY = this.transform.position.y;
-		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
+		if(Math.abs(this.transform.position.x - target.tile.x*16) < 1.0 && Math.abs(this.transform.position.y - target.tile.y*16) < 1.0) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
@@ -1108,6 +1112,19 @@ function createPath(a , b, scene) {
 	var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
 
+    this.checkTile = function(x,y) {
+        var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
+        if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+            if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
+            if (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+                return false;
+            }
+            
+        }
+        return true;
+    }
+
+
 	this.addAdjTile = function(x,y,mcost) {
 		var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
 		if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
@@ -1180,9 +1197,57 @@ function createPath(a , b, scene) {
 		c = new Tile();
 		c = list[list.length-1].parent;
 	}
-	list.reverse();
+	//list.reverse();
+    var path = new Array();
+    for(var i = list.length-1; i >= 0; i--) {
+        path.push(list[i]);
+        if(i > 0 && list[i].tile.x != list[i-1].tile.x && list[i].tile.y != list[i-1].tile.y) {
+            //right side
+            if(list[i-1].tile.x - list[i].tile.x > 0) {
+                //right down
+                if(list[i-1].tile.y - list[i].tile.y >= 0) {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //right up
+                else {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+            //left side
+            else {
+                //left down
+                if(list[i-1].tile.y - list[i].tile.y > 0) {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //left up
+                else {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+        }
+    }
 
-	return list;
+	return path;
 }
 
 
