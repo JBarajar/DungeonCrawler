@@ -1,7 +1,14 @@
 <!DOCTYPE HTML>
-<html>
-<head>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:fb="http://ogp.me/ns/fb#">
+<head>	
+<title>Dungeon Crawler Engine Prototype</title>
+<meta property="og:image" content="http://mrmatt.tv/dungeoncrawler/img/preview.png" />
+<meta property="og:description"  content="2D graphics!" />
+
 <style type="text/css">
+
+@font-face { font-family: Pixel; src: url('fonts/Pixeled.ttf'); } 
 
 body {
 	width: 100%;
@@ -16,18 +23,19 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    max-width: 100%;
-    max-height: 100%;
     height: 100%;
+	max-height: 100%;
     margin: auto;
-    overflow: auto;
     background-color: white;
-
+      
 
 }
 
 
+
+
 </style>
+
 
 
 </head>
@@ -36,10 +44,16 @@ body {
 <canvas id="canvas" width="320" height="240"></canvas>
 
 <div style="display:none;">
-		<img id="chest" src="img/chest.png" />
+		<img id="basicTiles" src="img/basictiles.png" />
+		<img id="characters" src="img/characters.png" />
+		<img id="charactersRed" src="img/charactersRed.png" />
+		<img id="charactersWhite" src="img/charactersWhite.png" />
 </div>
 	
 </body>
+
+<script type="text/javascript" src="scripts/jquery-3.1.1.min.js"></script>
+
 <script type="text/javascript">
 
 var input = {
@@ -60,22 +74,35 @@ var width = 320;
 var height = 240;
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-var Scene = new Scene();
+var Scene;
 var startTime = new Date();
 var endTime = new Date();
 var draw = true;
 
+var tileImage;
+
+var draw = true;
+
+
 document.addEventListener('keydown',doKeyDown,false);
 document.addEventListener('keyup',doKeyRelease,false);
 
-var player;
-//tile offest (tile size /2)
-var tO = 8;
+
+$(function() {
+
+	Scene = new Scene();
+	tileImage = document.getElementById("basicTiles");
 
 
-Scene.Start();
+	Scene.Start();
 
-requestAnimationFrame(mainLoop);
+	requestAnimationFrame(mainLoop);
+
+});
+
+
+
+
 
 //X & Y coordinates
 function Vector2() {
@@ -90,16 +117,92 @@ function Transform() {
 }
 
 
-function BoxCollider(width, height, parent, isTrigger) {
-	this.parent  = parent;
-	this.offset = new Vector2(); 
-	this.trigger = isTrigger;
+function BoxCollider(width, height, parent) {
+
+	this.offset = new Vector2();
+	this.parent = parent;
 	this.width = width;
 	this.height = height;
 
 	this.checkCollision = function(scene, position) {
 
+		//Get tile id
+		var tileID;
 
+		for(var i = 0; i < scene.tileRenderer.map.layers.length; i++) {
+
+			if(scene.tileRenderer.map.layers[i].type == "tilelayer") {
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor(position.x/16) + scene.tileRenderer.map.width*Math.floor((position.y - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				} 
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor((position.x + this.width)/16) + scene.tileRenderer.map.width*Math.floor((position.y - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor((position.x + this.width)/16) + scene.tileRenderer.map.width*Math.floor((position.y + this.height - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+				tileID = scene.tileRenderer.map.layers[i].data[Math.floor(position.x/16) + scene.tileRenderer.map.width*Math.floor((position.y + this.height - 16)/16)] - 1;
+
+
+
+				if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()]) {
+					if(scene.tileRenderer.map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+						return true;
+
+
+					}
+
+
+				}
+
+
+
+			}
+
+		}
+		
+
+
+
+
+
+
+
+
+		/*
 
 		if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x)/16)]) {
 				if(Scene.tiles[Math.floor((position.y)/16)][Math.floor((position.x)/16)] == 2) {
@@ -129,46 +232,8 @@ function BoxCollider(width, height, parent, isTrigger) {
 				}
 		}
 
-
-		/*
-
-		//Top left
-		if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x - this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x - this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-		//Top right
-		if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x + this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y - this.height)/16)][Math.floor((position.x + this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-
-		//Bottom left
-		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x - this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x - this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
-
-		//Bottom right
-		if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)]) {
-				if(Scene.tiles[Math.floor((position.y + this.height)/16)][Math.floor((position.x + this.width)/16)] == 2) {
-					return true;
-
-				}
-		}
-
 		*/
+
 
 		//To-do: check for other box colliders
 
@@ -187,24 +252,21 @@ function BoxCollider(width, height, parent, isTrigger) {
 					   this.height + position.y > scene.GameObjects[i].transform.position.y) {
 
 						/*if(scene.GameObjects[i].onCollide) {
+
 							scene.GameObjects[i].onCollide();
 
 						}*/
 
 						if(this.parent.onCollide) {
-							this.parent.onCollide(scene.GameObjects[i]);
+							return this.parent.onCollide(scene, scene.GameObjects[i]);
+
 						}
 
-						if(scene.GameObjects[i].boxCollider.trigger == true) {
-							return false;
-						}
-						else return true;
+                        return true;
+
 					}
 
 					
-
-					
-
 				}
 
 
@@ -248,37 +310,45 @@ function Key() {
 
 }
 
-
 function Enemy(x, y) {
 	this.type = "Enemy";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(15, 15, this, true);
+	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
-	this.speed = getRandomArbitrary(0.07, 0.1);
+
+    this.smoothMove = true;
+    //DONT SET SPEED HIGHER THAN 1.0
+    if(this.smoothMove) this.speed = 0.8;
+    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
+
     this.damage = 10;
 	//this.img = document.getElementById("chest");
 	this.path;
-	var n = 0;
+	this.n = 0;
 	this.playerPos = new Vector2();
-	this.playerPos.x = player.transform.position.x+tO;
-	this.playerPos.y = player.transform.position.y+tO;
+	this.playerPos.x;
+	this.playerPos.y;
     var prevX = this.transform.position.x;
     var prevY = this.transform.position.y;
+    var tO = 8;
 
-    this.knockBack = false;
-    this.kbtarget = new Vector2();
+    this.img = this.img = document.getElementById("characters");
+    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+    this.frame = 0;
+
+    this.drawPath = false;
 
     this.refreshPath = function(scene) {
-        this.playerPos.x = player.transform.position.x+tO;
-        this.playerPos.y = player.transform.position.y+tO;
-        this.path = createPath(this,player,scene);
+        this.playerPos.x = scene.player.transform.position.x+tO;
+        this.playerPos.y = scene.player.transform.position.y+tO;
+        this.path = createPath(this,scene.player,scene);
                 
         if(this.path.length < 2) {
-            n = 0;
+            this.n = 0;
         } 
         else {
-            n = 1;
+            this.n = 1;
         } 
     }
 
@@ -286,60 +356,88 @@ function Enemy(x, y) {
 		//Store previous values of X and Y (for collisions)
 		prevX = this.transform.position.x;
 		prevY = this.transform.position.y;
-		if(Math.abs(this.transform.position.x - target.tile.x*16) < 0.5 && Math.abs(this.transform.position.y - target.tile.y*16) < 0.5) {
+		if(Math.abs(this.transform.position.x - target.tile.x*16) < 1.0 && Math.abs(this.transform.position.y - target.tile.y*16) < 1.0) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
-			if(Math.floor(this.playerPos.x/16) != Math.floor((player.transform.position.x+tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((player.transform.position.y+tO)/16)) {
-				this.playerPos.x = player.transform.position.x+tO;
-				this.playerPos.y = player.transform.position.y+tO;
-				this.path = createPath(this,player,scene);
-				
-				if(this.path.length < 2) {
-					n = 0;
-				} 
-				else {
-					n = 1;
-				} 
+			if(Math.floor(this.playerPos.x/16) != Math.floor((scene.player.transform.position.x+tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((scene.player.transform.position.y+tO)/16)) {
+				this.refreshPath(scene);
 			}
 
-			else if(n < this.path.length-1) {
-				n++;
+			else if(this.n < this.path.length-1) {
+				this.n++;
 			}
 			
-		} 
-		this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed)
+		}
+        if(!this.smoothMove) this.transform.position.x = lerp2(this.transform.position.x, target.tile.x*16, this.speed);
+    	else {
+            if(target.tile.x*16 - this.transform.position.x > 0) this.transform.position.x += this.speed;
+            else if(target.tile.x*16 - this.transform.position.x < 0) this.transform.position.x -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.x = prevX;
 
 		}
-		this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed)
+		if(!this.smoothMove) this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed);
+        else { 
+            if(target.tile.y*16 - this.transform.position.y > 0) this.transform.position.y += this.speed;
+            else if(target.tile.y*16 - this.transform.position.y < 0)this.transform.position.y -= this.speed;
+        }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 			this.transform.position.y = prevY;
 
 		}
 	}
 
-	this.onCollide = function(collider) {
-		if(collider.type == "Attack") {
+    this.setFacing = function() {
+        if(this.transform.position.y - prevY > 0) {
+            this.facing = 0;
+        }
+        else if(this.transform.position.y - prevY < 0){
+            this.facing = 3;
+        }
+
+        if(this.transform.position.x - prevX > 0) {
+            this.facing = 2;
+        }
+        else if(this.transform.position.x - prevX < 0){
+            this.facing = 1;
+        }
+
+    }
+
+	this.onCollide = function(scene, collider) {
+		if(collider.type = "Enemy") {
+			//return true;
+
+		}
+        /*if(collider.type == "Attack") {
             if(!this.knockBack) {
                 this.knockBack = true;
                 this.kbtarget.x = this.transform.position.x - ((collider.boxPos.x - this.transform.position.x) * 2);
                 this.kbtarget.y = this.transform.position.y - ((collider.boxPos.y - this.transform.position.y) * 2);
             }
             
-        }
+        }*/
 	}
 
 	this.Start = function(scene) {
-		this.path = createPath(this,player,scene);
+		this.playerPos.x = scene.player.transform.position.x+tO;
+		this.playerPos.y = scene.player.transform.position.y+tO;
+		this.path = createPath(this,scene.player,scene);
 
 	}
 
 	this.Update = function(scene) {
 		
-        if(!this.knockBack) {
-		  this.Move(this.path[n],scene);
+
+        this.frame += scene.deltaTime*0.01;
+        this.frame = this.frame % 3;
+		this.Move(this.path[this.n],scene);
+        this.setFacing();
+
+        /*if(!this.knockBack) {
+          this.Move(this.path[n],scene);
         }
         else {
             this.transform.position.y = lerp2(this.transform.position.y, this.kbtarget.y, 0.1);
@@ -359,9 +457,10 @@ function Enemy(x, y) {
                 this.knockBack = false;
                 this.refreshPath(Scene);
             }
-        }
+        }*/
 
-	}
+        
+    }
 
 	this.Draw = function(scene) {
 
@@ -373,12 +472,59 @@ function Enemy(x, y) {
 		/*
 		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 		*/
-        if(this.knockBack) {
-            ctx.fillStyle = "red";
-        }
-		else  ctx.fillStyle = "green";
 
-		 ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+        if(this.drawPath) {
+            ctx.fillStyle = "white";
+            for(var i = 0; i < this.path.length; i++) {
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16 - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+                ctx.globalAlpha = 1.0;
+                ctx.fillText(i, Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16+8 - scene.Camera.transform.position.y + scene.Camera.offset.y));
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+		ctx.fillStyle = "green";
+
+		//ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+
+        ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        
+
+	}
+
+
+}
+
+function StaticProp(buffer, x, y) {
+	this.transform = new Transform();
+	this.type = "StaticProp";
+	this.boxCollider = new BoxCollider(16, 16, this);
+	this.transform.position.x = x;
+	this.transform.position.y = y;
+
+	this.offset = new Vector2();
+	this.offset.x = 0;
+	this.offset.y = -16;
+	this.img = buffer;
+
+	this.onCollide = function(scene, collider) {
+
+		return true;
+	}
+
+	this.Start = function(scene) {
+
+
+	}
+
+	this.Update = function(scene) {
+
+
+	}
+
+	this.Draw = function(scene) {
+		ctx.drawImage(this.img, 0, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 
 
 	}
@@ -389,17 +535,17 @@ function Enemy(x, y) {
 function Chest(x, y) {
 	this.type = "Chest";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16, this, false);
-	this.transform.position.x = x*16;
-	this.transform.position.y = y*16;
+	this.boxCollider = new BoxCollider(16, 16, this);
+	this.transform.position.x = x;
+	this.transform.position.y = y;
 	this.img = document.getElementById("chest");
 
 	this.Inventory = [];
 
 	this.isOpen = 0;
 
-	this.onCollide = function(collider) {
-		this.isOpen = 1;
+	this.onCollide = function(scene, collider) {
+		//this.isOpen = 1;
 
 	}
 
@@ -494,244 +640,270 @@ function Swing(dir,pos,damage) {
 }
 
 function Player() {
-	this.type = "Player";
 	this.transform = new Transform();
-	this.boxCollider = new BoxCollider(16, 16, this, true);
-	this.transform.position.x = 64;
-	this.transform.position.y = 64;
-    this.knockBack = false;
-    this.invuln = false;
-    this.flash = false;
-    this.flashing = false;
-    this.dir = "left" 
-    this.attacking = false;
-    
-    this.kbtarget = new Vector2();
-	var prevX = this.transform.position.x;
-	var prevY = this.transform.position.y;
-    var invuln = this.invuln;
+	this.type = "Player";
+	this.boxCollider = new BoxCollider(14, 14, this);
+	this.transform.position.x = 80;
+	this.transform.position.y = 88;
 
 	this.speed = 0.1;
 
 	this.health = 100;
+	this.img = document.getElementById("characters");
+	this.imgRed = document.getElementById("charactersRed");
+	this.imgWhite = document.getElementById("charactersWhite");
+	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+	this.frame = 0;
 
-    this.inventory = {
-        "sword": true
-    };
+	this.prevX = 0;
+	this.prevY = 0;
 
+	this.knockBack = false;
+	this.kbPos = new Vector2();
 
-    // Collection of attacks?
-    this.attack = function() {
-      // Melee attack
-      if (this.inventory["sword"]) {
+	this.invuln = false;
+	this.flash = false;
+	this.flashing = false;
+	this.flashSpeed = 150; //milliseconds
 
-      }
-    }
-
-	// TODO: Implement a die function
-	this.die = function() {
-        // Stops updating screen when player dies
-        draw = false;
-
-        ctx.fillStyle = "#000";
-
-        ctx.fillRect(0,0,width,height);
-
-        ctx.font = "26px sans-serif";
-        ctx.fillStyle = "red";
-
-        ctx.fillText("You dead",(width / 3),(height / 2));
-
-	}
-
-    this.resetInvuln = function() {
-        player.invuln = false;
-        console.log("resetInvuln");
-    }
-    this.setFlash = function() {
-        if(player.flash) {
-            player.flash = false;
-        }
-        else {player.flash = true;}
-        if(player.invuln) {setTimeout(player.setFlash, 100);}
-    }
-    this.resetAttack = function() {
-        player.attacking = false;
-    }
-
-	this.onCollide = function(collider) {
-		if(collider.type == "Chest") {
-			collider.isOpen = 1;
-			console.log("Hit Chest");
-		}
-		if(collider.type == "Enemy") {
-            if(!this.invuln) {
-                if(!this.knockBack) {
-                    console.log("Hit Enemy");
-                    this.knockBack = true;
-                    this.invuln = true;
-                    // Invulnerability timer
-                    setTimeout(this.resetInvuln, 1000);
-                    this.health = this.health - collider.damage;
-                    this.kbtarget.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
-                    this.kbtarget.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
-                }
+	this.getHit = function(collider) {
+		if(!this.invuln) {
+			if(!this.knockBack) {
+				this.knockBack = true;
+				this.health = this.health - collider.damage;
+				this.kbPos.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
+	            this.kbPos.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
 			}
 		}
+	}
 
+    this.die = function() {
+
+    }
+
+	this.resetInvuln = function() {
+		this.invuln = false;
+	}
+
+	this.setFlash = function() {
+		if(this.flash) {
+            this.flash = false;
+        }
+        else {this.flash = true;}
+        if(this.invuln) setTimeout(this.setFlash.bind(this), this.flashSpeed);
+        else this.flashing = false;
+	}
+
+
+	this.setPosition = function(x, y) {
+		this.transform.position.x = x;
+		this.transform.position.y = y;
+		this.prevX = x;
+		this.prevY = y;
+	}
+
+
+	this.onCollide = function(scene, collider) {
+		if(collider.type) {
+			if(collider.type == "StaticProp") {
+				collider.onCollide(scene, this);
+			}
+			if(collider.type == "Chest") {
+				collider.isOpen = 1;
+				return true;
+			}
+			if(collider.type == "Enemy") {
+				this.getHit(collider);
+			}
+		}
 	}
 
 	this.Start = function(scene) {
-        
+
 		
 	}
 
 	this.Update = function(scene) {
-        console.log(this.dir);
+        //console.log("Player position: (" + this.transform.position.x + ", " + this.transform.position.y + ")");
+        //console.log("Player tile: (" + Math.floor(this.transform.position.x/16) + ", " + Math.floor(this.transform.position.y/16) + ")");
+
+        scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.004);
+
         //Store previous values of X and Y (for collisions)
-        prevX = this.transform.position.x;
-        prevY = this.transform.position.y;
+        this.prevX = this.transform.position.x;
+        this.prevY = this.transform.position.y;
 
         if(this.health <= 0) {
                 this.die();
         }
 
-        scene.Camera.transform.position = lerp(scene.Camera.transform.position, this.transform.position, scene.deltaTime*0.001);
-
+        //KnockBack
         if(this.knockBack) {
-            this.transform.position.y = lerp2(this.transform.position.y, this.kbtarget.y, this.speed);
+            this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.y = prevY;
+                this.transform.position.y = this.prevY;
                 this.knockBack = false;
+                this.invuln = true;
+                setTimeout(this.resetInvuln.bind(this), 1000);
             }
-            this.transform.position.x = lerp2(this.transform.position.x, this.kbtarget.x, this.speed);
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, this.speed);
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.x = prevX;
+                this.transform.position.x = this.prevX;
                 this.knockBack = false;
+                this.invuln = true;
+                setTimeout(this.resetInvuln.bind(this), 1000);
             }
 
-            if(Math.abs(this.transform.position.x - this.kbtarget.x) < 1 && Math.abs(this.transform.position.y - this.kbtarget.y) < 1) {
+            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
                 this.knockBack = false;
+                this.invuln = true;
+                setTimeout(this.resetInvuln.bind(this), 1000);
             }
         }
 
+        //Move Normaally
         else {
-            
-    		
 
-    		if(input.w || input.s) {
-    			if(input.w) {
-            // this.dir = "up";
-    				this.transform.position.y -= (scene.deltaTime * this.speed);
+            if(input.w || input.s || input.a || input.d) {
+
+                this.frame += scene.deltaTime*0.01;
+                this.frame = this.frame % 3;
+
+            }
+            //Return to standing position if idle
+            else {
+                this.frame = 1;
+            }
+
+
+            if(input.w || input.s) {
+                if(input.w) {
+                    this.transform.position.y -= (scene.deltaTime * this.speed);
+                    this.facing = 3; //Up
+
+
+
                 }
 
-    			if(input.s) {
-            // this.dir = "down";
-    				this.transform.position.y += (scene.deltaTime * this.speed);
-    			}	
-    		}
+                if(input.s) {
+                    this.transform.position.y += (scene.deltaTime * this.speed);
+                    this.facing = 0; //Down
 
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                }
+
+                /*
+
+                // Check collisions based on current tile (Scene.tiles[y][x])
+                if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
                     this.transform.position.y = prevY;
 
-            };
-
-
-    		
-
-    		if(input.a || input.d) {
-    			if(input.a) {
-            // this.dir = "left";
-    				this.transform.position.x -= (scene.deltaTime * this.speed);
-    			}
-
-    			if(input.d) {
-            // this.dir = "right";
-    				this.transform.position.x += (scene.deltaTime * this.speed);
-    			}
-    		}
-
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                    this.transform.position.x = prevX;
-            }
-
-            // Checks 3 downward directions
-            if(input.arrowKeyDown) {
-              this.dir = "down";
-            }
-
-            // Checks 3 upward directions
-            if(input.arrowKeyUp) {
-              this.dir = "up";
-            }
-
-            if(input.arrowKeyRight) {
-              this.dir = "right";
-            }
-
-            if(input.arrowKeyLeft) {
-              this.dir = "left";
-            }
-
-            if(input.arrowKeyDown && input.arrowKeyLeft) {
-              this.dir = "down left";
-            }
-
-            if(input.arrowKeyDown && input.arrowKeyRight) {
-              this.dir = "down right";
-            }
-
-            if(input.arrowKeyUp && input.arrowKeyLeft) {
-              this.dir = "up left";
-            }
-
-            if(input.arrowKeyUp && input.arrowKeyRight) {
-              this.dir = "up right";
-            }
-
-            if(input.space) {
-                if(!this.attacking) {
-                    this.attacking = true;
-                    setTimeout(this.resetAttack, 200);
+                    }
                 }
+                */
+
+
+                
+                if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+                } else {
+                    this.transform.position.y = this.prevY;
+
+                }
+                
+
+
             }
 
-            if(this.attacking) {
-                swing = new Swing(this.dir, this.transform.position, 10);
+
+            
+
+            if(input.a || input.d) {
+                if(input.a) {
+                    this.transform.position.x -= (scene.deltaTime * this.speed);
+                    this.facing = 1; //Left
+
+                }
+
+                if(input.d) {
+                    this.transform.position.x += (scene.deltaTime * this.speed);
+                    this.facing = 2; //Right
+
+                }
+
+                /*
+
+                // Check collisions based on current tile (Scene.tiles[y][x])
+                if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+                    this.transform.position.x = prevX;
+
+                    }
+
+                }
+
+                */
+
+
+                
+                if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
+
+                } else {
+                    this.transform.position.x = this.prevX;
+
+
+                }
+                
+
+                
+
             }
+
+            //idle collision check
+            if(!input.w && !input.s && !input.a && !input.d) {
+                this.boxCollider.checkCollision(scene, this.transform.position)
+            }
+
         }
-	}
+
+        
+
+
+
+
+    }
 
 	this.Draw = function(scene) {
-        if(this.knockBack) ctx.fillStyle = "red";
-        else if(this.invuln) {
+         ctx.fillStyle = "#000000";
+         //ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+
+         
+
+         //Draw KnockBack Sprite
+         if(this.knockBack) {
+            ctx.drawImage(this.imgRed, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+         }
+
+         //Draw invulnverable sprite 
+         else if(this.invuln) {
             if(!this.flashing) {
                 this.flashing = true;
                 this.flash = true;
-                setTimeout(this.setFlash, 100);
-            }
-            
-            if(this.flash) {
-                ctx.fillStyle = "#D6D5D5";
-            }
-            else {
-                ctx.fillStyle = "#000000";
-            }
-        }
-        else {
-            this.flashing = false;
-            ctx.fillStyle = "#000000";
-        }
+                setTimeout(this.setFlash.bind(this), this.flashSpeed);
+             }
 
-		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+             if(this.flash) {
+                ctx.drawImage(this.imgWhite, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+             }
+             else ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+         }
          
-        ctx.fillStyle = "red";
-        if(this.health <= 0) {
-            //ctx.fillRect(10,10,0,10);
-        } 
-        else ctx.fillRect(10,10,this.health,10);
+         //Draw Normally
+         else {
+            ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+         } 
 
-        if(this.attacking) {
+        /*if(this.attacking) {
             ctx.strokeStyle = "red"
 
             if (this.dir == "up") {
@@ -767,7 +939,7 @@ function Player() {
               if (this.dir == "down right") {
                 ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
-        }
+        }*/
 	}
 
 }
@@ -775,43 +947,171 @@ function Player() {
 
 function TileRenderer() {
 	this.transform = new Transform();
-	
 
-	this.Start = function(scene) {
+    this.map = {};
+    this.img = document.getElementById("basicTiles");
 
-		for(var i = 0; i < scene.tiles.length; i++) {
+    this.tileBuffer = document.createElement('canvas');;
 
-			for(var j = 0; j < scene.tiles[i].length; j++) {
+    this.tileContext = this.tileBuffer.getContext('2d');
 
-				if(scene.tiles[j][i] == 1) {
-					scene.tileContext.strokeStyle = "#CCCCCC"
-					scene.tileContext.strokeRect(i*16,j*16,16,16);
-				}
+    this.Start = function(scene) {
 
-				if(scene.tiles[j][i] == 2) {
-					scene.tileContext.fillRect(i*16,j*16,16,16);
+        this.tileBuffer = document.createElement('canvas');
+        this.tileContext = this.tileBuffer.getContext('2d');
+        this.img = document.getElementById("basicTiles");
 
-				}
+        $.ajaxSetup({async: false});
 
-			}
+        console.log("before map load");
+        var mapData = {};
 
-		}
-
-
-	}
-
-	this.Update = function(scene) {
+        $.get('maps/testMap.json', function(data) {
+            mapData = data;
+            console.log("during map load");
 
 
+        });
 
-	}
+        console.log("after map load");
 
-	this.Draw = function(scene) {
-		ctx.drawImage(scene.tileBuffer, Math.floor(-scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(-scene.Camera.transform.position.y + scene.Camera.offset.y));
-		
+        this.map = JSON.parse(mapData);
+
+        this.tileBuffer.width = this.map.width * 16;
+        this.tileBuffer.height = this.map.height * 16;
+
+        for(var i = 0; i < this.map.layers.length; i++) {
+
+                if(this.map.layers[i].type == "tilelayer") {
+
+                    for(var y = 0; y < this.map.height; y++) {
+
+                        for(var x = 0; x < this.map.width; x++) {
+
+                            var tileID = this.map.layers[i].data[x + this.map.width*y] - 1;
+
+                            var tX = tileID % 8;
+                            var tY = Math.floor(tileID / 8);
+
+                            this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, x*16, y*16, this.map.tilewidth, this.map.tileheight);
 
 
-	}
+                        }
+
+                    }
+
+
+                } else if(this.map.layers[i].type == "objectgroup") {
+                    for(var o = 0; o < this.map.layers[i].objects.length; o++) {
+
+                        var gID = this.map.layers[i].objects[o].gid - 1;
+
+                        var tX = gID % 8;
+                        var tY = Math.floor(gID / 8);
+
+                        var imgBuffer = document.createElement('canvas');
+                        var imgCtx = imgBuffer.getContext('2d');
+
+                        imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
+
+                        var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
+
+                        if(this.map.layers[i].objects[o].properties) {
+                            if(this.map.layers[i].objects[o].properties.onCollide) {
+                                prop.onCollide = new Function("scene", this.map.layers[i].objects[o].properties.onCollide + "return true;");
+
+
+                            }
+
+
+
+                        }
+
+                        scene.GameObjects.push(prop);
+
+
+
+                    }
+
+
+                }
+
+
+            }
+
+
+
+        /*
+    
+            $.get('/maps/testMap.json', function(data) {
+                this.tileBuffer = document.createElement('canvas');
+                this.tileContext = this.tileBuffer.getContext('2d');
+                this.img = document.getElementById("basicTiles");
+
+                this.map = data;
+
+
+                this.tileBuffer.width = this.map.width * this.map.tilewidth;
+            this.tileBuffer.height = this.map.height * this.map.tileheight;
+
+            for(var i = 0; i < this.map.layers.length; i++) {
+
+                if(this.map.layers[i].type == "tilelayer") {
+
+                    for(var y = 0; y < this.map.height; y++) {
+
+                        for(var x = 0; x < this.map.width; x++) {
+
+                            var tileID = this.map.layers[i].data[x + this.map.width*y] - 1;
+
+                            var tX = tileID % 8;
+                            var tY = tileID / 8;
+
+                            this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, this.map.tilewidth, this.map.tileheight, this.map.tilewidth, this.map.tileheight);
+
+
+                        }
+
+                    }
+
+
+                }
+
+
+            }
+
+            });
+            */
+
+
+            
+
+            
+
+
+        
+
+
+        
+    }
+
+    this.Update = function(scene) {
+
+
+
+    }
+
+    this.Draw = function(scene) {
+        
+
+
+        ctx.drawImage(this.tileBuffer, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y + 16), this.map.width*this.map.tilewidth, this.map.height*this.map.tileheight);
+
+
+        
+
+
+    }
 
 
 
@@ -852,99 +1152,65 @@ function Camera() {
 
 
 function Scene() {
-	this.GameObjects = [];
-	this.deltaTime = 0.0;
-	this.Camera = new Camera();
+    this.GameObjects = [];
+    this.deltaTime = 0.0;
+    this.Camera = new Camera();
 
-	this.tiles = [[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2]
-				 ,[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]];
+    this.tileBuffer = document.createElement('canvas');
+    this.tileBuffer.width = 1024;
+    this.tileBuffer.height = 1024;
+    this.tileContext = this.tileBuffer.getContext('2d');
 
-	this.tileBuffer = document.createElement('canvas');
-	this.tileBuffer.width = 1024;
-	this.tileBuffer.height = 1024;
-	this.tileContext = this.tileBuffer.getContext('2d');
+    this.tileRenderer = new TileRenderer();
+    this.player = new Player();
 
-	this.Start = function() {
-		for(var i = 0; i < this.GameObjects.length; i++) {
-			this.GameObjects[i].Start(this);
+    this.Start = function() {
 
-		}
 
-	}
+        for(var i = 0; i < this.GameObjects.length; i++) {
+            this.GameObjects[i].Start(this);
 
-	this.Update = function() {
+        }
 
-		this.Camera.Update(this);
-
-		for(var i = 0; i < this.GameObjects.length; i++) {
-			this.GameObjects[i].Update(this);
-
-		}
-
-		
-
-		this.deltaTime = new Date() - startTime;
-		startTime = new Date();
-	}
-
-	this.Draw = function() {
-    // Draws when draw is true
-    if (draw) {
-      ctx.fillStyle = "#BBBBBB";
-      ctx.fillRect(0, 0, width, height);
-
-      for(var i = 0; i < this.GameObjects.length; i++) {
-        this.GameObjects[i].Draw(this);
-      }
     }
-	}
 
-	this.GameObjects.push(new TileRenderer());
-	player = new Player();
-	this.GameObjects.push(player);
+    this.Update = function() {
 
-	this.GameObjects.push(new Chest(10,10));
-	this.GameObjects.push(new Chest(12,10));
-	enemy = new Enemy(9,4);
-	this.GameObjects.push(enemy);
-  //enemy = new Enemy(10,5);
-  //this.GameObjects.push(enemy);
-  //enemy = new Enemy(11,6);
-  //his.GameObjects.push(enemy);
-	
-	
+        this.Camera.Update(this);
+
+        for(var i = 0; i < this.GameObjects.length; i++) {
+            this.GameObjects[i].Update(this);
+
+        }
+
+        
+
+        this.deltaTime = new Date() - startTime;
+        startTime = new Date();
+    }
+
+    this.Draw = function() {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, width, height);
 
 
+        for(var i = 0; i < this.GameObjects.length; i++) {
+            this.GameObjects[i].Draw(this);
+        }
+
+        //Draw Health (Above other Objects)
+            if(this.player.health > 0) {
+                ctx.fillStyle = "red";
+                ctx.fillRect(10,10,this.player.health,8);
+            }
+    }
+
+    this.GameObjects.push(this.tileRenderer);
+    this.player = new Player();
+    this.GameObjects.push(this.player);
+    this.enemy = new Enemy(7,7);
+    this.GameObjects.push(this.enemy);
+    //this.GameObjects.push(new Enemy(7,7));
 
 
 }
@@ -953,8 +1219,7 @@ function Scene() {
 function mainLoop() {
 
 	Scene.Update();
-	Scene.Draw();
-
+    if(draw) Scene.Draw();
 
 	requestAnimationFrame(mainLoop);
 
@@ -964,8 +1229,8 @@ function Tile(x, y, cost) {
 	this.getTile = function(n) {
 		return Math.floor(n/16);
 	}
-	this.getCost = function(s, end) {
-		this.g = this.parent.g + 1;
+	this.getCost = function(s, end, mcost) {
+		this.g = this.parent.g + mcost;
 		this.h = Math.abs(end.tile.x - this.tile.x) + Math.abs(end.tile.y - this.tile.y)
 		return this.g + this.h;
 	}
@@ -1009,81 +1274,157 @@ function findObjects(scene, type) {
 }
 
 function createPath(a , b, scene) {
-	var map = new Array();
-	map = scene.tiles;
-	var openList = new Array();
-	var closedList = new Array();
-	var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
-	var curr = start;
-
-	var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
-	var tempTile = new Tile(0,0,0);
+    var tO = 8;
+    var map = new Array();
+    map = scene.tileRenderer.map;
+    var openList = new Array();
+    var closedList = new Array();
+    var start = new Tile(a.transform.position.x,a.transform.position.y, 0);
+    var curr = start;
+    var target = new Tile(b.transform.position.x+tO, b.transform.position.y+tO);
+    var tempTile = new Tile(0,0,0);
     var objList = findObjects(scene, ["Chest", "Enemy"]);
-	this.addAdjTile = function(x,y) {
-		if(map[y][x] == 1) {
-			tempTile = new Tile(0,0,0);
-			tempTile.tile.x = x;
-			tempTile.tile.y = y;
-			tempTile.parent = curr;
-			tempTile.cost = tempTile.getCost(start,target);
-			if(!inList(tempTile, closedList) && !inList(tempTile, objList)) {
-				if(inList(tempTile, openList)) {
-					var i = 0;
-					for(i = 0; i < openList.length-1;i++) {
-						if(tempTile.tile.x == openList[i].tile.x && tempTile.tile.y == openList[i].tile.y) {
 
-						}
-					}
-				}
-				else {
-					openList.push(tempTile);
-				} 
-				
-			} 
-		}
-	}
+    this.checkTile = function(x,y) {
+        var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
+        if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+            if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
+            if (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+                return false;
+            }
+            
+        }
+        return true;
+    }
 
-	do {
-	//for(var ind = 0; ind < 7; ind++) {
-		closedList.push(curr);
-		//left tile
-		this.addAdjTile(curr.tile.x-1,curr.tile.y);
-		//right tile
-		this.addAdjTile(curr.tile.x+1,curr.tile.y);
-		//top tile
-		this.addAdjTile(curr.tile.x,curr.tile.y-1);
-		//bottom tile
-		this.addAdjTile(curr.tile.x,curr.tile.y+1);
-		tempTile = new Tile(0,0,0);
-		var index = openList.length-1;
-		tempTile = openList[index];
-		for(var i = openList.length-1; i >= 0; i--) {
-			if(openList[i].tile.x == target.tile.x && openList[i].tile.y == target.tile.y) {
-				tempTile = openList[i];
-				index = i;
-				break;
-			}
-			else if(tempTile.cost > openList[i].cost) {
-				tempTile = openList[i];
-				index = i;
-			}
-		}
-		openList.splice(index,1);
-		curr = new Tile(0,0,0);
-		curr = tempTile;
-	} while((closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y) && curr != null);
 
-	var list = new Array();
-	var c = new Tile();
-	var c = closedList[closedList.length-1];
-	while (c != null) {
-		list.push(c);
-		c = new Tile();
-		c = list[list.length-1].parent;
-	}
-	list.reverse();
+    this.addAdjTile = function(x,y,mcost) {
+        var tileID = map.layers[0].data[x + map.width*(y-1)]-1;
+        if(!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid) {
+            tempTile = new Tile(0,0,0);
+            tempTile.tile.x = x;
+            tempTile.tile.y = y;
+            tempTile.parent = curr;
+            tempTile.cost = tempTile.getCost(start,target,mcost);
+            if(map.layers[1].data[x + map.width*(y-1)]-1) tileID = map.layers[1].data[x + map.width*(y-1)]-1;
+            if(!inList(tempTile, closedList) && (!map.tilesets[0].tileproperties[tileID.toString()] || !map.tilesets[0].tileproperties[tileID.toString()].isSolid)) {
+                if(inList(tempTile, openList)) {
+                    /*var i = 0;
+                    for(i = 0; i < openList.length-1;i++) {
+                        if(tempTile.tile.x == openList[i].tile.x && tempTile.tile.y == openList[i].tile.y) {
 
-	return list;
+                        }
+                    }*/
+                }
+                else {
+                    openList.push(tempTile);
+                } 
+                
+            } 
+        }
+    }
+
+    do {
+    //for(var ind = 0; ind < 7; ind++) {
+        closedList.push(curr);
+        //left tile
+        this.addAdjTile(curr.tile.x-1,curr.tile.y,10);
+        //right tile
+        this.addAdjTile(curr.tile.x+1,curr.tile.y,10);
+        //top tile
+        this.addAdjTile(curr.tile.x,curr.tile.y-1,10);
+        //bottom tile
+        this.addAdjTile(curr.tile.x,curr.tile.y+1,10);
+        //Top left
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y-1,14);
+        //Top right
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y-1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y-1,14);
+        //Bot left
+        if(!this.checkTile(curr.tile.x-1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x-1,curr.tile.y+1,14);
+        //Bot right
+        if(!this.checkTile(curr.tile.x+1,curr.tile.y) && !this.checkTile(curr.tile.x,curr.tile.y+1))
+            this.addAdjTile(curr.tile.x+1,curr.tile.y+1,14);
+        tempTile = new Tile(0,0,0);
+        var index = openList.length-1;
+        tempTile = openList[index];
+        for(var i = openList.length-1; i >= 0; i--) {
+            if(openList[i].tile.x == target.tile.x && openList[i].tile.y == target.tile.y) {
+                tempTile = openList[i];
+                index = i;
+                break;
+            }
+            else if(tempTile.cost > openList[i].cost) {
+                tempTile = openList[i];
+                index = i;
+            }
+        }
+        openList.splice(index,1);
+        curr = new Tile(0,0,0);
+        curr = tempTile;
+    } while((closedList[closedList.length-1].tile.x != target.tile.x || closedList[closedList.length-1].tile.y != target.tile.y) && curr != null);
+
+    var list = new Array();
+    var c = new Tile();
+    var c = closedList[closedList.length-1];
+    while (c != null) {
+        list.push(c);
+        c = new Tile();
+        c = list[list.length-1].parent;
+    }
+    //list.reverse();
+    var path = new Array();
+    for(var i = list.length-1; i >= 0; i--) {
+        path.push(list[i]);
+        if(i > 0 && list[i].tile.x != list[i-1].tile.x && list[i].tile.y != list[i-1].tile.y) {
+            //right side
+            if(list[i-1].tile.x - list[i].tile.x > 0) {
+                //right down
+                if(list[i-1].tile.y - list[i].tile.y >= 0) {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //right up
+                else {
+                    if(this.checkTile(list[i].tile.x+1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x+1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+            //left side
+            else {
+                //left down
+                if(list[i-1].tile.y - list[i].tile.y > 0) {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y+1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y+1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+                //left up
+                else {
+                    if(this.checkTile(list[i].tile.x-1,list[i].tile.y)) {
+                        path.push(new Tile((list[i].tile.x)*16, (list[i].tile.y-1)*16, 0));
+                    }
+                    else if(this.checkTile(list[i].tile.x,list[i].tile.y-1)) {
+                        path.push(new Tile((list[i].tile.x-1)*16, (list[i].tile.y)*16, 0));
+                    }
+                }
+            }
+        }
+    }
+
+    return path;
 }
 
 
