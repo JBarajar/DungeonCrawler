@@ -333,7 +333,12 @@ function Enemy(x, y) {
     var prevY = this.transform.position.y;
     var tO = 8;
 
-    this.img = this.img = document.getElementById("characters");
+    this.knockBack = false;
+    this.resetingKB = false;
+    this.kbPos = new Vector2();
+
+    this.img = document.getElementById("characters");
+    this.imgRed = document.getElementById("charactersRed");
     this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
     this.frame = 0;
 
@@ -350,6 +355,12 @@ function Enemy(x, y) {
         else {
             this.n = 1;
         } 
+    }
+
+    this.resetKnockBack = function() {
+        this.knockBack = false;
+        this.resetingKB = false;
+        this.refreshPath(Scene);
     }
 
 	this.Move = function(target,scene) {
@@ -406,19 +417,25 @@ function Enemy(x, y) {
 
     }
 
+    this.getHit = function(collider) {
+            if(!this.knockBack) {
+                this.knockBack = true;
+                this.kbPos.x = this.transform.position.x - ((collider.boxPos.x - this.transform.position.x) * 2);
+                this.kbPos.y = this.transform.position.y - ((collider.boxPos.y - this.transform.position.y) * 2);
+            }
+    }
+
 	this.onCollide = function(scene, collider) {
-		if(collider.type = "Enemy") {
+        if(collider.type == "StaticProp") {
+            collider.onCollide(scene, this);
+        }
+		if(collider.type == "Enemy") {
 			//return true;
 
 		}
-        /*if(collider.type == "Attack") {
-            if(!this.knockBack) {
-                this.knockBack = true;
-                this.kbtarget.x = this.transform.position.x - ((collider.boxPos.x - this.transform.position.x) * 2);
-                this.kbtarget.y = this.transform.position.y - ((collider.boxPos.y - this.transform.position.y) * 2);
-            }
-            
-        }*/
+        else if(collider.type == "Attack") {
+            this.getHit(collider);
+        }
 	}
 
 	this.Start = function(scene) {
@@ -429,49 +446,45 @@ function Enemy(x, y) {
 	}
 
 	this.Update = function(scene) {
-		
-
-        this.frame += scene.deltaTime*0.01;
-        this.frame = this.frame % 3;
-		this.Move(this.path[this.n],scene);
-        this.setFacing();
-
-        /*if(!this.knockBack) {
-          this.Move(this.path[n],scene);
-        }
-        else {
-            this.transform.position.y = lerp2(this.transform.position.y, this.kbtarget.y, 0.1);
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.y = prevY;
-                this.knockBack = false;
-                this.refreshPath(Scene);
-            }
-            this.transform.position.x = lerp2(this.transform.position.x, this.kbtarget.x, 0.1);
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.x = prevX;
-                this.knockBack = false;
-                this.refreshPath(Scene);
-            }
-
-            if(Math.abs(this.transform.position.x - this.kbtarget.x) < 1 && Math.abs(this.transform.position.y - this.kbtarget.y) < 1) {
-                this.knockBack = false;
-                this.refreshPath(Scene);
-            }
-        }*/
 
         
+        if(!this.knockBack) {
+            this.frame += scene.deltaTime*0.01;
+            this.frame = this.frame % 3;
+    		this.Move(this.path[this.n],scene);
+            this.setFacing();
+        }
+        else {
+
+            prevX = this.transform.position.x;
+            prevY = this.transform.position.y;
+
+            this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, 0.1);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.y = prevY;
+                if(!this.resetingKB) {
+                    this.resetingKB = true;
+                    setTimeout(this.resetKnockBack.bind(this), 500);
+                }
+            }
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, 0.1);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.x = prevX;
+                if(!this.resetingKB) {
+                    this.resetingKB = true;
+                    setTimeout(this.resetKnockBack.bind(this), 500);
+                }
+            }
+
+            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
+                this.knockBack = false;
+                this.refreshPath(scene);
+            }
+        }
+   
     }
 
 	this.Draw = function(scene) {
-
-
-		/*
-		ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (16/2)),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (16/2)),16,16);
-		*/
-
-		/*
-		ctx.drawImage(this.img, this.isOpen * 16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
-		*/
 
         if(this.drawPath) {
             ctx.fillStyle = "white";
@@ -485,10 +498,8 @@ function Enemy(x, y) {
         }
 
 		ctx.fillStyle = "green";
-
-		//ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
-
-        ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        if(this.knockBack) ctx.drawImage(this.imgRed,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        else ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         
 
 	}
@@ -583,37 +594,37 @@ function Door(x, y) {
 function Swing(dir,pos,damage) {
   this.type = "Attack";
   var tileSize = 16;
-  this.boxCollider = new BoxCollider(16,16,this,true);
+  this.boxCollider = new BoxCollider(16,16,this);
   this.boxPos = new Vector2();
 
-  this.onCollide = function(collider) {
+  this.onCollide = function(scene, collider) {
     if(collider.type == "Enemy") {
         console.log("attacked Enemy");
-        collider.onCollide(this);
+        collider.onCollide(scene, this);
     }
   }
 
-  if (dir == "up") {
+  if (dir == 3) {
     this.boxPos.x = pos.x;
     this.boxPos.y = pos.y - tileSize;
   }
 
-  if (dir == "down") {
+  if (dir == 0) {
     this.boxPos.x = pos.x;
     this.boxPos.y = pos.y + tileSize;
   }
   
-  if (dir == "left") {
+  if (dir == 1) {
     this.boxPos.x = pos.x - tileSize;
     this.boxPos.y = pos.y;
   }
   
-  if (dir == "right") {
+  if (dir == 2) {
     this.boxPos.x = pos.x + tileSize;
     this.boxPos.y = pos.y;
   }
 
-  if (dir == "up left") {
+  /*if (dir == "up left") {
     this.boxPos.x = pos.x - tileSize;
     this.boxPos.y = pos.y - tileSize;
   }
@@ -631,7 +642,7 @@ function Swing(dir,pos,damage) {
   if (dir == "down right") {
     this.boxPos.x = pos.x + tileSize;
     this.boxPos.y = pos.y + tileSize;
-  }
+  }*/
 
   this.boxCollider.checkCollision(Scene, this.boxPos);
 
@@ -665,6 +676,8 @@ function Player() {
 	this.flash = false;
 	this.flashing = false;
 	this.flashSpeed = 150; //milliseconds
+
+    this.attacking = false;
 
 	this.getHit = function(collider) {
 		if(!this.invuln) {
@@ -864,6 +877,15 @@ function Player() {
                 this.boxCollider.checkCollision(scene, this.transform.position)
             }
 
+            if(input.space) {
+                this.attacking = true;
+            }
+            else this.attacking = false;
+
+            if(this.attacking) {
+                swing = new Swing(this.facing, this.transform.position, 10);
+            }
+
         }
 
         
@@ -903,27 +925,27 @@ function Player() {
             ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
          } 
 
-        /*if(this.attacking) {
+        if(this.attacking) {
             ctx.strokeStyle = "red"
 
-            if (this.dir == "up") {
+            if (this.facing == 3) {
                 ctx.strokeRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y-16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
 
-              if (this.dir == "down") {
+              if (this.facing == 0) {
                 ctx.strokeRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
               
-              if (this.dir == "left") {
+              if (this.facing == 1) {
                 ctx.strokeRect(Math.floor((this.transform.position.x-16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
               
-              if (this.dir == "right") {
+              if (this.facing == 2) {
                 ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
 
 
-              // 4 corner directional cases
+              /*// 4 corner directional cases
               if (this.dir == "up left") {
                 ctx.strokeRect(Math.floor((this.transform.position.x-16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y-16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
               }
@@ -938,8 +960,8 @@ function Player() {
               
               if (this.dir == "down right") {
                 ctx.strokeRect(Math.floor((this.transform.position.x+16) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
-              }
-        }*/
+              }*/
+        }
 	}
 
 }
@@ -1431,7 +1453,6 @@ function createPath(a , b, scene) {
 function doKeyDown(e) {
 
 			var code = e.keyCode;
-      console.log(e.keyCode);
 
 			if (code == 87) { // w
 				input.w = true;
