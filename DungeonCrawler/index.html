@@ -317,6 +317,9 @@ function Enemy(x, y) {
 	this.transform.position.x = x*16;
 	this.transform.position.y = y*16;
 
+  this.isDead = false;
+  this.health = 100;
+
     this.smoothMove = true;
     //DONT SET SPEED HIGHER THAN 1.0
     if(this.smoothMove) this.speed = 0.8;
@@ -343,6 +346,10 @@ function Enemy(x, y) {
     this.frame = 0;
 
     this.drawPath = false;
+
+    this.die = function() {
+      this.isDead = true;
+    }
 
     this.refreshPath = function(scene) {
         this.playerPos.x = scene.player.transform.position.x+tO;
@@ -447,6 +454,10 @@ function Enemy(x, y) {
 
 	this.Update = function(scene) {
 
+        // Checks if enemy is dead
+        if (this.health <= 0) {
+          this.die();
+        }
         
         if(!this.knockBack) {
             this.frame += scene.deltaTime*0.01;
@@ -997,7 +1008,7 @@ function TileRenderer() {
 
         console.log("after map load");
 
-        this.map = JSON.parse(mapData);
+        this.map = mapData;
 
         this.tileBuffer.width = this.map.width * 16;
         this.tileBuffer.height = this.map.height * 16;
@@ -1201,7 +1212,8 @@ function Scene() {
         this.Camera.Update(this);
 
         for(var i = 0; i < this.GameObjects.length; i++) {
-            this.GameObjects[i].Update(this);
+          if(this.GameObjects[i].isDead) delete this.GameObjects[i];
+           else this.GameObjects[i].Update(this);
 
         }
 
@@ -1232,6 +1244,7 @@ function Scene() {
     this.GameObjects.push(this.player);
     this.enemy = new Enemy(7,7);
     this.GameObjects.push(this.enemy);
+    // delete this.enemy.Draw;
     //this.GameObjects.push(new Enemy(7,7));
 
 
