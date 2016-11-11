@@ -331,6 +331,7 @@ function Enemy(x, y) {
 
     this.drawPath = false;
 
+
     this.refreshPath = function(scene) {
         this.playerPos.x = scene.player.transform.position.x+tO;
         this.playerPos.y = scene.player.transform.position.y+tO;
@@ -545,8 +546,8 @@ function Player() {
 	this.transform = new Transform();
 	this.type = "Player";
 	this.boxCollider = new BoxCollider(14, 14, this);
-	this.transform.position.x = 80;
-	this.transform.position.y = 88;
+	this.transform.position.x = 7*16;
+	this.transform.position.y = 13*16;
 
 	this.speed = 0.1;
 
@@ -567,6 +568,14 @@ function Player() {
 	this.flash = false;
 	this.flashing = false;
 	this.flashSpeed = 150; //milliseconds
+
+	this.setPos = function(x, y) {
+
+    	this.transform.position.x = x;
+    	this.transform.position.y = y;
+
+    }
+
 
 	this.getHit = function(collider) {
 		if(!this.invuln) {
@@ -825,7 +834,15 @@ function TileRenderer() {
 
 	this.tileContext = this.tileBuffer.getContext('2d');
 
-	this.Start = function(scene) {
+	this.loadMap = function(filename, scene) {
+
+		scene.GameObjects = []; //Clear array
+
+
+		scene.GameObjects.push(this); //Push this tile renderer back into the list
+		scene.GameObjects.push(scene.player); //Push player back into the list
+
+
 
 		this.tileBuffer = document.createElement('canvas');
 		this.tileContext = this.tileBuffer.getContext('2d');
@@ -836,7 +853,7 @@ function TileRenderer() {
 		console.log("before map load");
 		var mapData = {};
 
-		$.get('maps/testMap.json', function(data) {
+		$.get('maps/' + filename + '.json', function(data) {
 			mapData = data;
 			console.log("during map load");
 
@@ -954,11 +971,13 @@ function TileRenderer() {
 			*/
 
 
-			
 
-			
+	}
 
+	this.Start = function(scene) {
 
+		
+		this.loadMap("testMap", scene);
 		
 
 
@@ -1034,14 +1053,17 @@ function Scene() {
 	this.tileRenderer = new TileRenderer();
 	this.player = new Player();
 
-	this.Start = function() {
+	this.loadMap = function(fileName) {
 
+		this.tileRenderer.loadMap(fileName, this);
+	}
+
+	this.Start = function() {
 
 		for(var i = 0; i < this.GameObjects.length; i++) {
 			this.GameObjects[i].Start(this);
 
 		}
-
 	}
 
 	this.Update = function() {
@@ -1078,8 +1100,8 @@ function Scene() {
 	this.GameObjects.push(this.tileRenderer);
 	this.player = new Player();
 	this.GameObjects.push(this.player);
-    this.enemy = new Enemy(7,7);
-    this.GameObjects.push(this.enemy);
+    //this.enemy = new Enemy(7,7);
+    //this.GameObjects.push(this.enemy);
 	//this.GameObjects.push(new Enemy(7,7));
 
 
