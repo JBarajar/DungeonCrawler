@@ -410,6 +410,7 @@ function Enemy(x, y) {
 		this.playerPos.y = scene.player.transform.position.y+tO;
 		this.path = createPath(this,scene.player,scene);
 
+
 	}
 
 	this.Update = function(scene) {
@@ -1059,15 +1060,25 @@ function Scene() {
 	}
 
 	this.Start = function() {
+        this.GameObjects.push(this.tileRenderer);
+        this.player = new Player();
+        this.GameObjects.push(this.player);
+        //run TileRenderer's Start() before pushing in other objects to prevent them from being wiped from inital loadMap call
+        this.tileRenderer.Start(this);
 
-		for(var i = 0; i < this.GameObjects.length; i++) {
+        //-----Add other GameObjects Here-----
+        //this.enemy = new Enemy(7,7);
+        //this.GameObjects.push(this.enemy);
+        //this.GameObjects.push(new Enemy(7,7));
+
+        //Skips TileRenderer at index 0 since already done above
+		for(var i = 1; i < this.GameObjects.length; i++) {
 			this.GameObjects[i].Start(this);
 
 		}
 	}
 
 	this.Update = function() {
-
 		this.Camera.Update(this);
 
 		for(var i = 0; i < this.GameObjects.length; i++) {
@@ -1096,14 +1107,6 @@ function Scene() {
 			 	ctx.fillRect(10,10,this.player.health,8);
 			}
 	}
-
-	this.GameObjects.push(this.tileRenderer);
-	this.player = new Player();
-	this.GameObjects.push(this.player);
-    //this.enemy = new Enemy(7,7);
-    //this.GameObjects.push(this.enemy);
-	//this.GameObjects.push(new Enemy(7,7));
-
 
 }
 
