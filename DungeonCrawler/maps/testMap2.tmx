@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="16" tileheight="16" nextobjectid="2">
+ <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="120" columns="8">
+  <image source="../img/basictiles.png" width="128" height="240"/>
+  <tile id="14">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="27">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="80">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="81">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="91">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+  <tile id="99">
+   <properties>
+    <property name="isSolid" type="bool" value="true"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="Tile Layer 1" width="16" height="16">
+  <data encoding="csv">
+81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,81,
+81,15,15,15,15,15,15,15,15,15,15,15,15,15,15,81,
+81,15,15,15,15,15,15,15,15,15,15,15,15,15,15,81,
+81,15,15,15,15,15,15,15,15,15,15,15,15,15,15,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,14,14,14,14,14,14,14,14,14,14,14,14,14,14,81,
+81,15,15,15,15,15,15,14,14,15,15,15,15,15,15,81
+</data>
+ </layer>
+ <objectgroup name="Object Layer 1">
+  <object id="1" name="Door" gid="49" x="119" y="256" width="16" height="16">
+   <properties>
+    <property name="onCollide">scene.player.setPos(7*16, 5*16);
+scene.loadMap(&quot;testMap&quot;);</property>
+   </properties>
+  </object>
+ </objectgroup>
+ <layer name="Tile Layer 2" width="16" height="16">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,100,0,0,0,0,100,0,28,100,0,0,28,0,100,0,
+0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,28,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
+0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+</map>

@@ -453,6 +453,7 @@ function Enemy(x, y) {
 		this.playerPos.y = scene.player.transform.position.y+tO;
 		this.path = createPath(this,scene.player,scene);
 
+
 	}
 
 	this.Update = function(scene) {
@@ -676,8 +677,8 @@ function Player() {
 	this.transform = new Transform();
 	this.type = "Player";
 	this.boxCollider = new BoxCollider(14, 14, this);
-	this.transform.position.x = 80;
-	this.transform.position.y = 88;
+	this.transform.position.x = 7*16;
+	this.transform.position.y = 13*16;
 
 	this.speed = 0.1;
 
@@ -700,6 +701,13 @@ function Player() {
 	this.flashSpeed = 150; //milliseconds
 
     this.attacking = false;
+
+	this.setPos = function(x, y) {
+
+    	this.transform.position.x = x;
+    	this.transform.position.y = y;
+
+    }
 
 	this.getHit = function(collider) {
 		if(!this.invuln) {
@@ -1000,7 +1008,15 @@ function TileRenderer() {
 
     this.tileContext = this.tileBuffer.getContext('2d');
 
-    this.Start = function(scene) {
+	this.loadMap = function(filename, scene) {
+
+		scene.GameObjects = []; //Clear array
+
+
+		scene.GameObjects.push(this); //Push this tile renderer back into the list
+		scene.GameObjects.push(scene.player); //Push player back into the list
+
+
 
         this.tileBuffer = document.createElement('canvas');
         this.tileContext = this.tileBuffer.getContext('2d');
@@ -1011,16 +1027,16 @@ function TileRenderer() {
         console.log("before map load");
         var mapData = {};
 
-        $.get('maps/testMap.json', function(data) {
-            mapData = data;
-            console.log("during map load");
+		$.get('maps/' + filename + '.json', function(data) {
+			mapData = data;
+			console.log("during map load");
 
 
         });
 
         console.log("after map load");
 
-		this.map = mapData;
+		this.map = JSON.parse(mapData);
 
         this.tileBuffer.width = this.map.width * 16;
         this.tileBuffer.height = this.map.height * 16;
@@ -1129,14 +1145,13 @@ function TileRenderer() {
             */
 
 
-            
-
-            
+	}
 
 
-        
-
-
+	this.Start = function(scene) {
+		
+		this.loadMap("testMap", scene);
+		
         
     }
 
@@ -1209,19 +1224,32 @@ function Scene() {
     this.tileRenderer = new TileRenderer();
     this.player = new Player();
 
-    this.Start = function() {
+	this.loadMap = function(fileName) {
 
+		this.tileRenderer.loadMap(fileName, this);
+	}
 
-        for(var i = 0; i < this.GameObjects.length; i++) {
-            this.GameObjects[i].Start(this);
+	this.Start = function() {
+        this.GameObjects.push(this.tileRenderer);
+        this.player = new Player();
+        this.GameObjects.push(this.player);
+        //run TileRenderer's Start() before pushing in other objects to prevent them from being wiped from inital loadMap call
+        this.tileRenderer.Start(this);
 
-        }
+        //-----Add other GameObjects Here-----
+        this.enemy = new Enemy(7,7);
+        this.GameObjects.push(this.enemy);
+        //this.GameObjects.push(new Enemy(7,7));
 
-    }
+        //Skips TileRenderer at index 0 since already done above
+		for(var i = 1; i < this.GameObjects.length; i++) {
+			this.GameObjects[i].Start(this);
 
-    this.Update = function() {
+		}
+	}
 
-        this.Camera.Update(this);
+	this.Update = function() {
+		this.Camera.Update(this);
 
         for(var i = 0; i < this.GameObjects.length; i++) {
           // Deletes game objcects
@@ -1251,15 +1279,6 @@ function Scene() {
                 ctx.fillRect(10,10,this.player.health,8);
             }
     }
-
-    this.GameObjects.push(this.tileRenderer);
-    this.player = new Player();
-    this.GameObjects.push(this.player);
-    this.enemy = new Enemy(7,7);
-    this.GameObjects.push(this.enemy);
-    // delete this.enemy.Draw;
-    //this.GameObjects.push(new Enemy(7,7));
-
 
 }
 

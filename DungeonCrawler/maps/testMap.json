@@ -34,7 +34,7 @@
                  "name":"Door",
                  "properties":
                     {
-                     "onCollide":"scene.player.setPosition(272, 460);"
+                     "onCollide":"scene.player.setPos(7*16, 13*16);\nscene.loadMap(\"testMap2\");"
                     },
                  "propertytypes":
                     {
@@ -46,26 +46,6 @@
                  "width":16,
                  "x":111.833,
                  "y":50.8333
-                }, 
-                {
-                 "gid":49,
-                 "height":16,
-                 "id":34,
-                 "name":"Door",
-                 "properties":
-                    {
-                     "onCollide":"scene.player.setPosition(112, 72);"
-                    },
-                 "propertytypes":
-                    {
-                     "onCollide":"string"
-                    },
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":272,
-                 "y":434
                 }],
          "opacity":1,
          "properties":
