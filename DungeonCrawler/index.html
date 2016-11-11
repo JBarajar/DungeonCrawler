@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+1<!DOCTYPE HTML>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:fb="http://ogp.me/ns/fb#">
 <head>	
@@ -320,6 +320,8 @@ function Enemy(x, y) {
   this.isDead = false;
   this.health = 100;
 
+  this.drawHealth = true;
+
     this.smoothMove = true;
     //DONT SET SPEED HIGHER THAN 1.0
     if(this.smoothMove) this.speed = 0.8;
@@ -429,7 +431,8 @@ function Enemy(x, y) {
                 this.knockBack = true;
                 this.kbPos.x = this.transform.position.x - ((collider.boxPos.x - this.transform.position.x) * 2);
                 this.kbPos.y = this.transform.position.y - ((collider.boxPos.y - this.transform.position.y) * 2);
-            }
+                this.health -= collider.damage;
+              }
     }
 
 	this.onCollide = function(scene, collider) {
@@ -508,13 +511,20 @@ function Enemy(x, y) {
             ctx.globalAlpha = 1.0;
         }
 
+
 		ctx.fillStyle = "green";
         if(this.knockBack) ctx.drawImage(this.imgRed,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         else ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
-        
+        if(this.drawHealth) {
+          ctx.fillStyle = "#000";
+          ctx.fillRect(Math.floor((this.transform.position.x - 1) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+15) - scene.Camera.transform.position.y + scene.Camera.offset.y),(112)/6,5);
+          ctx.fillStyle = "red";
+          ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,3);
+        }
+
 
 	}
-
+        
 
 }
 
@@ -607,6 +617,7 @@ function Swing(dir,pos,damage) {
   var tileSize = 16;
   this.boxCollider = new BoxCollider(16,16,this);
   this.boxPos = new Vector2();
+  this.damage = damage;
 
   this.onCollide = function(scene, collider) {
     if(collider.type == "Enemy") {
@@ -894,7 +905,8 @@ function Player() {
             else this.attacking = false;
 
             if(this.attacking) {
-                swing = new Swing(this.facing, this.transform.position, 10);
+                // Damage is now 20
+                swing = new Swing(this.facing, this.transform.position, 20);
             }
 
         }
@@ -1212,7 +1224,8 @@ function Scene() {
         this.Camera.Update(this);
 
         for(var i = 0; i < this.GameObjects.length; i++) {
-          if(this.GameObjects[i].isDead) delete this.GameObjects[i];
+          // Deletes game objcects
+          if(this.GameObjects[i].isDead) this.GameObjects.splice(i,1);
            else this.GameObjects[i].Update(this);
 
         }
