@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="16" tileheight="16" nextobjectid="4">
- <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="120" columns="8">
-  <image source="../img/basictiles.png" width="128" height="240"/>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="16" tileheight="16" nextobjectid="5">
+ <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="512" columns="8">
+  <image source="../img/basictiles.png" width="128" height="1024"/>
   <tile id="14">
    <properties>
     <property name="isSolid" type="bool" value="true"/>
@@ -68,6 +68,12 @@
    <properties>
     <property name="onCollide">scene.player.setPosition(7*16, 5*16);
 scene.loadMap(&quot;testMap&quot;);</property>
+   </properties>
+  </object>
+  <object id="4" gid="97" x="112.924" y="66.8152" width="16" height="16">
+   <properties>
+    <property name="onCollide">scene.player.setPosition(30*16, 47*16);
+scene.loadMap(&quot;chaise-1&quot;);</property>
    </properties>
   </object>
  </objectgroup>

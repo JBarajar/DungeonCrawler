@@ -35,6 +35,26 @@
                  "width":16,
                  "x":119,
                  "y":256
+                }, 
+                {
+                 "gid":97,
+                 "height":16,
+                 "id":4,
+                 "name":"",
+                 "properties":
+                    {
+                     "onCollide":"scene.player.setPosition(30*16, 47*16);\nscene.loadMap(\"chaise-1\");"
+                    },
+                 "propertytypes":
+                    {
+                     "onCollide":"string"
+                    },
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":112.924104832259,
+                 "y":66.8152260857291
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -54,7 +74,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":4,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
@@ -63,12 +83,12 @@
          "columns":8,
          "firstgid":1,
          "image":"..\/img\/basictiles.png",
-         "imageheight":240,
+         "imageheight":1024,
          "imagewidth":128,
          "margin":0,
          "name":"basictiles",
          "spacing":0,
-         "tilecount":120,
+         "tilecount":512,
          "tileheight":16,
          "tileproperties":
             {

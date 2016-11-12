@@ -1055,7 +1055,6 @@ function TileRenderer() {
 
         this.tileBuffer = document.createElement('canvas');
         this.tileContext = this.tileBuffer.getContext('2d');
-        this.img = document.getElementById("basicTiles");
 
         $.ajaxSetup({async: false});
 
@@ -1072,6 +1071,9 @@ function TileRenderer() {
         console.log("after map load");
 
 		this.map = mapData;
+
+        this.img = document.getElementById("basicTiles");
+
 
         this.tileBuffer.width = this.map.width * 16;
         this.tileBuffer.height = this.map.height * 16;
