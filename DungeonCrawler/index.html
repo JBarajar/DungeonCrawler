@@ -272,7 +272,7 @@ function BoxCollider(width, height, parent) {
 
                         }
 
-                        return true;
+                        else return true;
 
                         }
                     }
@@ -772,6 +772,9 @@ function Player() {
 		this.transform.position.y = y;
 		this.prevX = x;
 		this.prevY = y;
+
+		Scene.Camera.transform.position.x = x;
+		Scene.Camera.transform.position.y = y;
 	}
 
 
@@ -779,6 +782,7 @@ function Player() {
 		if(collider.type) {
 			if(collider.type == "StaticProp") {
 				collider.onCollide(scene, this);
+                return true;
 			}
 			if(collider.type == "Chest") {
 				collider.isOpen = 1;
@@ -860,10 +864,16 @@ function Player() {
 
                 }
 
+
                 if(input.s) {
                     this.transform.position.y += (scene.deltaTime * this.speed);
                     this.facing = 0; //Down
 
+                }
+
+				
+				if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+					this.transform.position.y = this.prevY;
                 }
 
                 /*
@@ -876,15 +886,6 @@ function Player() {
                     }
                 }
                 */
-
-
-                
-                if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-                } else {
-                    this.transform.position.y = this.prevY;
-
-                }
                 
 
 
@@ -906,6 +907,10 @@ function Player() {
 
                 }
 
+                if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                    this.transform.position.x = this.prevX;
+                }
+
                 /*
 
                 // Check collisions based on current tile (Scene.tiles[y][x])
@@ -918,19 +923,7 @@ function Player() {
                 }
 
                 */
-
-
-                
-                if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-                } else {
-                    this.transform.position.x = this.prevX;
-
-
-                }
-                
-
-                
+  
 
             }
 
@@ -959,10 +952,6 @@ function Player() {
             }
         }
 
-        
-
-
-
 
     }
 
@@ -974,7 +963,7 @@ function Player() {
 
          //Draw KnockBack Sprite
          if(this.knockBack) {
-            ctx.drawImage(this.imgRed, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+            ctx.drawImage(this.imgRed, (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
          }
 
          //Draw invulnverable sprite 
@@ -986,14 +975,14 @@ function Player() {
              }
 
              if(this.flash) {
-                ctx.drawImage(this.imgWhite, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+                ctx.drawImage(this.imgWhite,  (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
              }
-             else ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+             else ctx.drawImage(this.img,  (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
          }
          
          //Draw Normally
          else {
-            ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+            ctx.drawImage(this.img, (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
          } 
 
         if(this.attacking) {
@@ -1123,9 +1112,12 @@ function TileRenderer() {
 
                         var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
 
-                        if(this.map.layers[i].objects[o].properties) {
-                            if(this.map.layers[i].objects[o].properties.onCollide) {
-                                prop.onCollide = new Function("scene", this.map.layers[i].objects[o].properties.onCollide + "return true;");
+						prop.onCollide = new Function("scene", "return true;");
+
+
+						if(this.map.layers[i].objects[o].properties) {
+							if(this.map.layers[i].objects[o].properties.onCollide) {
+								prop.onCollide = new Function("scene", this.map.layers[i].objects[o].properties.onCollide + "return true;");
 
 
                             }
