@@ -570,13 +570,6 @@ function Player() {
 	this.flashing = false;
 	this.flashSpeed = 150; //milliseconds
 
-	this.setPos = function(x, y) {
-
-    	this.transform.position.x = x;
-    	this.transform.position.y = y;
-
-    }
-
 
 	this.getHit = function(collider) {
 		if(!this.invuln) {
@@ -611,6 +604,9 @@ function Player() {
 		this.transform.position.y = y;
 		this.prevX = x;
 		this.prevY = y;
+
+		Scene.Camera.transform.position.x = x;
+		Scene.Camera.transform.position.y = y;
 	}
 
 
@@ -627,6 +623,8 @@ function Player() {
 				this.getHit(collider);
 			}
 		}
+
+		return true;
 	}
 
 	this.Start = function(scene) {
@@ -716,9 +714,7 @@ function Player() {
 
 
 				
-				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-				} else {
+				if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 					this.transform.position.y = this.prevY;
 
 				}
@@ -758,9 +754,7 @@ function Player() {
 
 
 				
-				if(!this.boxCollider.checkCollision(scene, this.transform.position)) {
-
-				} else {
+				if(this.boxCollider.checkCollision(scene, this.transform.position)) {
 					this.transform.position.x = this.prevX;
 
 
@@ -813,7 +807,7 @@ function Player() {
 		 
 		 //Draw Normally
 		 else {
-		 	ctx.drawImage(this.img, 3*16 + (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+		 	ctx.drawImage(this.img, (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
 		 } 
 
 
@@ -903,6 +897,9 @@ function TileRenderer() {
 						imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
 
 						var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
+
+						prop.onCollide = new Function("scene", "return true;");
+
 
 						if(this.map.layers[i].objects[o].properties) {
 							if(this.map.layers[i].objects[o].properties.onCollide) {

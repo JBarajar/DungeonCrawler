@@ -23,7 +23,7 @@
                  "name":"Door",
                  "properties":
                     {
-                     "onCollide":"scene.player.setPos(7*16, 5*16);\nscene.loadMap(\"testMap\");"
+                     "onCollide":"scene.player.setPosition(7*16, 5*16);\nscene.loadMap(\"testMap\");"
                     },
                  "propertytypes":
                     {
@@ -54,7 +54,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":2,
+ "nextobjectid":4,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
