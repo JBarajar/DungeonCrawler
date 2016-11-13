@@ -49,6 +49,7 @@ body {
 		<img id="charactersRed" src="img/charactersRed.png" />
 		<img id="charactersWhite" src="img/charactersWhite.png" />\
         <img id="weapon" src="img/weapon.png" />
+        <img id="dead" src="img/dead.png" />
         <audio id="doorSound" src="sounds/door.wav" preload="auto"></audio>
         <audio id="swingSound" src="sounds/swing.wav" preload="auto"></audio>
         <audio id="music" title="music-dungeon" src="sounds/music-dungeon.mp3" preload="auto" loop></audio>
@@ -371,8 +372,9 @@ function Enemy(x, y) {
 
     this.drawPath = false;
 
-    this.die = function() {
+    this.die = function(scene) {
       this.isDead = true;
+      scene.GameObjects.push(new DeadObject(this.transform.position, 1*16,2*16));
     }
 
     this.refreshPath = function(scene) {
@@ -488,7 +490,7 @@ function Enemy(x, y) {
 
         // Checks if enemy is dead
         if (this.health <= 0) {
-          this.die();
+          this.die(scene);
         }
         
         if(!this.knockBack) {
@@ -550,11 +552,27 @@ function Enemy(x, y) {
           ctx.fillStyle = "#000";
           ctx.fillRect(Math.floor((this.transform.position.x - 1) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+15) - scene.Camera.transform.position.y + scene.Camera.offset.y),(112)/6,5);
           ctx.fillStyle = "red";
-          ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,3);
+          ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,2.5);
         }
 	}
         
 
+}
+
+function DeadObject(pos,imgPosX,imgPosY) {
+    this.transform = new Transform();
+    this.transform.position.x = pos.x;
+    this.transform.position.y = pos.y;
+    this.img = document.getElementById("dead");
+    this.Start = function(scene) {
+
+    }
+    this.Update = function(scene) {
+
+    }
+    this.Draw = function(scene) {
+        ctx.drawImage(this.img, imgPosX, imgPosY, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+    }
 }
 
 function StaticProp(buffer, x, y) {
