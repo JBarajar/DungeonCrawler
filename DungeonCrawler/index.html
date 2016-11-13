@@ -336,6 +336,8 @@ function Enemy(x, y) {
 	this.boxCollider = new BoxCollider(15, 15, this);
 	this.transform.position.x = x;
 	this.transform.position.y = y;
+    this.active = false;
+    this.activationRange = 7*16;
 
     this.isDead = false;
     this.health = 100;
@@ -477,6 +479,9 @@ function Enemy(x, y) {
 	}
 
 	this.Update = function(scene) {
+        if(!this.active && Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.activationRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.activationRange && rayCast(scene,this,scene.player)) {
+            this.active = true;
+        }
 
         if(this.transform.position.y < scene.player.transform.position.y) this.layer = 2;
         else this.layer = 0;
@@ -487,10 +492,12 @@ function Enemy(x, y) {
         }
         
         if(!this.knockBack) {
-            this.frame += scene.deltaTime*0.01;
-            this.frame = this.frame % 3;
-    		this.Move(this.path[this.n],scene);
-            this.setFacing();
+            if(this.active) {
+                this.frame += scene.deltaTime*0.01;
+                this.frame = this.frame % 3;
+        		this.Move(this.path[this.n],scene);
+                this.setFacing();
+            }
         }
         else {
 
@@ -545,8 +552,6 @@ function Enemy(x, y) {
           ctx.fillStyle = "red";
           ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,3);
         }
-
-
 	}
         
 
@@ -1356,8 +1361,8 @@ function Scene() {
         this.tileRenderer.Start(this);
 
         //-----Add other GameObjects Here-----
-        //this.enemy = new Enemy(7,7);
-        //this.GameObjects.push(this.enemy);
+        this.enemy = new Enemy(7*16,6*16);
+        this.GameObjects.push(this.enemy);
         //this.GameObjects.push(new Enemy(7,7));
 
         //Skips TileRenderer at index 0 since already done above
@@ -1617,6 +1622,41 @@ function createPath(a , b, scene) {
     }
 
     return path;
+}
+
+function rayCast(scene, a, b) {
+    this.transform = new Transform();
+    this.transform.position.x = a.transform.position.x+8;
+    this.transform.position.y = a.transform.position.y+8;
+    this.target = new Transform();
+    this.target.position.x = b.transform.position.x+8;
+    this.target.position.y = b.transform.position.y+8;
+    this.boxCollider = new BoxCollider(1,1,this);
+    this.hit = false;
+    this.clear = false;
+
+    this.onCollide = function(scene, collider) {
+        if(collider == b) {
+            this.clear = true;
+        }
+        if(collider != a) {
+            return true;
+        }
+        
+        
+    }
+    while(Math.abs(this.transform.position.x - (this.target.position.x)) >= 1 || Math.abs(this.transform.position.y - (this.target.position.y)) >= 1) {
+        ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x - (1/2)),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y - (1/2)),1,1);
+        this.transform.position = lerp(this.transform.position, this.target.position,0.1);
+        if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+            if(this.clear) return true;
+            break;
+        }
+
+
+    }
+    return false;
+
 }
 
 function doKeyDown(e) {
