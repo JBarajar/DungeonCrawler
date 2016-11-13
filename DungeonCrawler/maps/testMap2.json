@@ -43,7 +43,7 @@
                  "name":"",
                  "properties":
                     {
-                     "onCollide":"scene.player.setPosition(30.5*16, 47*16);\nscene.loadMap(\"chaise-1\");\nscene.playSound(\"doorSound\");"
+                     "onCollide":"scene.player.setPosition(56.5*16, 70*16);\nscene.loadMap(\"chaise-1\");"
                     },
                  "propertytypes":
                     {

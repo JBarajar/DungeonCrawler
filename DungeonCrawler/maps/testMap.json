@@ -95,6 +95,14 @@
         }],
  "nextobjectid":44,
  "orientation":"orthogonal",
+ "properties":
+    {
+     "backgroundMusic":"music-dungeon"
+    },
+ "propertytypes":
+    {
+     "backgroundMusic":"string"
+    },
  "renderorder":"right-down",
  "tileheight":16,
  "tilesets":[

@@ -49,7 +49,9 @@ body {
 		<img id="charactersRed" src="img/charactersRed.png" />
 		<img id="charactersWhite" src="img/charactersWhite.png" />\
         <img id="weapon" src="img/weapon.png" />
-        <audio id="doorSound" src="sounds/door.wav" preload="auto" controls></audio>
+        <audio id="doorSound" src="sounds/door.wav" preload="auto"></audio>
+        <audio id="swingSound" src="sounds/swing.wav" preload="auto"></audio>
+        <audio id="music" title="music-dungeon" src="sounds/music-dungeon.mp3" preload="auto" loop></audio>
 </div>
 	
 </body>
@@ -944,6 +946,7 @@ function Player() {
                 this.canAttack = false;
                 this.atkframe = 0;
                 this.attacking = true;
+                scene.playSound("swingSound");
             }
 
 
@@ -1162,6 +1165,14 @@ function TileRenderer() {
 
             }
 
+            if(this.map.properties) {
+
+            	if(this.map.properties.backgroundMusic) {
+            		Scene.playMusic(this.map.properties.backgroundMusic);
+
+            	}
+            }
+
 
 
         /*
@@ -1312,6 +1323,20 @@ function Scene() {
     	
     	element.currentTime = 0;
     	element.play();
+    }
+
+    this.playMusic = function(soundName) {
+
+    	var element = document.getElementById("music");
+
+    	if($("#music").attr("title") != soundName || element.currentTime == 0) {
+    		$("#music").attr("title", soundName); 
+    		element.pause();
+			element.currentTime = 0;
+    		element.src = "sounds/" + soundName + ".mp3";
+    		element.play();
+    	}
+
     }
 
 	this.Start = function() {
