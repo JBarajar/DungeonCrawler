@@ -334,8 +334,8 @@ function Enemy(x, y) {
 	this.transform = new Transform();
     this.layer = 1;
 	this.boxCollider = new BoxCollider(15, 15, this);
-	this.transform.position.x = x*16;
-	this.transform.position.y = y*16;
+	this.transform.position.x = x;
+	this.transform.position.y = y;
 
     this.isDead = false;
     this.health = 100;
@@ -1137,7 +1137,12 @@ function TileRenderer() {
 
                         imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
 
-                        var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
+                        if(this.map.layers[i].objects[o].type == "Slime") {
+                        	//Scene.GameObjects.push(new Enemy(this.map.layers[i].objects[o].x,this.map.layers[i].objects[o].y));
+
+
+                        } else {
+                        	var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
 
 						prop.onCollide = new Function("scene", "return true;");
 
@@ -1154,6 +1159,10 @@ function TileRenderer() {
                         }
 
                         scene.GameObjects.push(prop);
+
+                        }
+
+                        
 
 
 

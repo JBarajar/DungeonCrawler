@@ -58,6 +58,18 @@
                  "width":16,
                  "x":119.016,
                  "y":156.185
+                }, 
+                {
+                 "gid":85,
+                 "height":16,
+                 "id":44,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":306.012096774194,
+                 "y":184.411290322581
                 }],
          "opacity":1,
          "properties":
@@ -93,7 +105,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":44,
+ "nextobjectid":45,
  "orientation":"orthogonal",
  "properties":
     {
