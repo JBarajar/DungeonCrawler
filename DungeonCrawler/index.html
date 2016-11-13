@@ -30,6 +30,13 @@ body {
       
 
 }
+#preloadfont {
+  font-family: Pixel;
+  opacity:0;
+  height:0;
+  width:0;
+  display:inline-block;
+}
 
 
 
@@ -41,6 +48,7 @@ body {
 </head>
 
 <body>
+<div id="preloadfont">.</div>
 <canvas id="canvas" width="320" height="240"></canvas>
 
 <div style="display:none;">
@@ -736,6 +744,7 @@ function Player() {
 	this.imgRed = document.getElementById("charactersRed");
 	this.imgWhite = document.getElementById("charactersWhite");
     this.imgWep = document.getElementById("weapon");
+    this.imgDead = document.getElementById("dead");
 	this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
 	this.frame = 0;
 
@@ -753,6 +762,8 @@ function Player() {
     this.atkframe = 0;
     this.canAttack = true;
     this.attacking = false;
+
+    this.alive = true;
 
 	this.setPos = function(x, y) {
 
@@ -773,7 +784,10 @@ function Player() {
 	}
 
     this.die = function() {
-
+        this.knockBack = false;
+        this.invuln = false;
+        this.attacking = false;
+        this.alive = false;
     }
 
     this.resetKnockBack = function() {
@@ -840,146 +854,149 @@ function Player() {
         this.prevY = this.transform.position.y;
 
         if(this.health <= 0) {
-                this.die();
+            this.die();
         }
+        
+        if(this.alive) {
 
-        //KnockBack
-        if(this.knockBack) {
-            this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.y = this.prevY;
-                if(!this.resetingKB) {
-                    this.resetingKB = true;
-                    setTimeout(this.resetKnockBack.bind(this), 300);
-                }
-            }
-            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, this.speed);
-            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.x = this.prevX;
-                if(!this.resetingKB) {
-                    this.resetingKB = true;
-                    setTimeout(this.resetKnockBack.bind(this), 300);
-                }
-                
-            }
-
-            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
-                this.knockBack = false;
-                this.invuln = true;
-                setTimeout(this.resetInvuln.bind(this), 1000);
-            }
-        }
-
-        //Move Normaally
-        else if(!this.attacking) {
-
-            if(input.w || input.s || input.a || input.d) {
-
-                this.frame += scene.deltaTime*0.01;
-                this.frame = this.frame % 3;
-
-            }
-            //Return to standing position if idle
-            else {
-                this.frame = 1;
-            }
-
-
-            if(input.w || input.s) {
-                if(input.w) {
-                    this.transform.position.y -= (scene.deltaTime * this.speed);
-                    this.facing = 3; //Up
-
-
-
-                }
-
-
-                if(input.s) {
-                    this.transform.position.y += (scene.deltaTime * this.speed);
-                    this.facing = 0; //Down
-
-                }
-
-				
-				if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-					this.transform.position.y = this.prevY;
-                }
-
-                /*
-
-                // Check collisions based on current tile (Scene.tiles[y][x])
-                if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-                    this.transform.position.y = prevY;
-
+            //KnockBack
+            if(this.knockBack) {
+                this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, this.speed);
+                if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                    this.transform.position.y = this.prevY;
+                    if(!this.resetingKB) {
+                        this.resetingKB = true;
+                        setTimeout(this.resetKnockBack.bind(this), 300);
                     }
                 }
-                */
-                
-
-
-            }
-
-
-            
-
-            if(input.a || input.d) {
-                if(input.a) {
-                    this.transform.position.x -= (scene.deltaTime * this.speed);
-                    this.facing = 1; //Left
-
-                }
-
-                if(input.d) {
-                    this.transform.position.x += (scene.deltaTime * this.speed);
-                    this.facing = 2; //Right
-
-                }
-
+                this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, this.speed);
                 if(this.boxCollider.checkCollision(scene, this.transform.position)) {
                     this.transform.position.x = this.prevX;
+                    if(!this.resetingKB) {
+                        this.resetingKB = true;
+                        setTimeout(this.resetKnockBack.bind(this), 300);
+                    }
+                    
                 }
 
-                /*
+                if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
+                    this.knockBack = false;
+                    this.invuln = true;
+                    setTimeout(this.resetInvuln.bind(this), 1000);
+                }
+            }
 
-                // Check collisions based on current tile (Scene.tiles[y][x])
-                if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
-                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
-                    this.transform.position.x = prevX;
+            //Move Normaally
+            else if(!this.attacking) {
+
+                if(input.w || input.s || input.a || input.d) {
+
+                    this.frame += scene.deltaTime*0.01;
+                    this.frame = this.frame % 3;
+
+                }
+                //Return to standing position if idle
+                else {
+                    this.frame = 1;
+                }
+
+
+                if(input.w || input.s) {
+                    if(input.w) {
+                        this.transform.position.y -= (scene.deltaTime * this.speed);
+                        this.facing = 3; //Up
+
+
 
                     }
 
+
+                    if(input.s) {
+                        this.transform.position.y += (scene.deltaTime * this.speed);
+                        this.facing = 0; //Down
+
+                    }
+
+    				
+    				if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+    					this.transform.position.y = this.prevY;
+                    }
+
+                    /*
+
+                    // Check collisions based on current tile (Scene.tiles[y][x])
+                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+                        if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+                        this.transform.position.y = prevY;
+
+                        }
+                    }
+                    */
+                    
+
+
                 }
 
-                */
-  
+
+                
+
+                if(input.a || input.d) {
+                    if(input.a) {
+                        this.transform.position.x -= (scene.deltaTime * this.speed);
+                        this.facing = 1; //Left
+
+                    }
+
+                    if(input.d) {
+                        this.transform.position.x += (scene.deltaTime * this.speed);
+                        this.facing = 2; //Right
+
+                    }
+
+                    if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                        this.transform.position.x = this.prevX;
+                    }
+
+                    /*
+
+                    // Check collisions based on current tile (Scene.tiles[y][x])
+                    if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)]) {
+                        if(Scene.tiles[Math.floor(this.transform.position.y/16)][Math.floor(this.transform.position.x/16)] == 2) {
+                        this.transform.position.x = prevX;
+
+                        }
+
+                    }
+
+                    */
+      
+
+                }
+
+                //idle collision check
+                if(!input.w && !input.s && !input.a && !input.d) {
+                    this.boxCollider.checkCollision(scene, this.transform.position)
+                }
+
+                if(!this.attacking && !this.canAttack && !input.space) {
+                    this.canAttack = true;
+                }
+                else if(input.space && this.canAttack) {
+                    this.canAttack = false;
+                    this.atkframe = 0;
+                    this.attacking = true;
+                    scene.playSound("swingSound");
+                }
+
 
             }
-
-            //idle collision check
-            if(!input.w && !input.s && !input.a && !input.d) {
-                this.boxCollider.checkCollision(scene, this.transform.position)
-            }
-
-            if(!this.attacking && !this.canAttack && !input.space) {
-                this.canAttack = true;
-            }
-            else if(input.space && this.canAttack) {
-                this.canAttack = false;
-                this.atkframe = 0;
-                this.attacking = true;
-                scene.playSound("swingSound");
-            }
-
-
-        }
-        else {
-            if(this.attacking) {
-                this.atkframe += 0.3;
-                // Damage is now 20
-                if(this.atkframe > 1) {swing = new Swing(this.facing, this.transform.position, 20);}
-                if(this.atkframe > 3) this.attacking = false;
+            else {
+                if(this.attacking) {
+                    this.atkframe += 0.3;
+                    // Damage is now 20
+                    if(this.atkframe > 1) {swing = new Swing(this.facing, this.transform.position, 20);}
+                    if(this.atkframe > 3) this.attacking = false;
+                }
             }
         }
 
@@ -1011,6 +1028,10 @@ function Player() {
              else ctx.drawImage(this.img,  (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
          }
          
+         else if(!this.alive) {
+            ctx.drawImage(this.imgDead, 0, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+         }
+
          //Draw Normally
          else {
             ctx.drawImage(this.img, (Math.floor(this.frame)*16), this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
@@ -1347,6 +1368,13 @@ function Scene() {
             else ctx.fillStyle = "#f44242";
             ctx.fillRect(10,10,this.player.health,8);
         }
+        else {
+            ctx.fillStyle = "white";
+            ctx.font = "30px Pixel";
+            ctx.fillText("Game Over", width/9,height/2);
+            ctx.font = "12px Pixel";
+            ctx.fillText("Hit Space to restart", width/5,height/1.5);
+        }
     }
 
     this.playSound = function(soundName) {
@@ -1398,6 +1426,10 @@ function Scene() {
           if(this.GameObjects[i].isDead) this.GameObjects.splice(i,1);
            else this.GameObjects[i].Update(this);
 
+        }
+
+        if(!this.player.alive && input.space) {
+            location.reload(false);
         }
 
 
