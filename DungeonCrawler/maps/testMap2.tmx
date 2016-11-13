@@ -34,7 +34,7 @@
   </tile>
   <tile id="91">
    <properties>
-    <property name="isSolid" type="bool" value="true"/>
+    <property name="isSolid" type="bool" value="false"/>
    </properties>
   </tile>
   <tile id="99">
@@ -67,13 +67,15 @@
   <object id="1" name="Door" gid="49" x="119" y="256" width="16" height="16">
    <properties>
     <property name="onCollide">scene.player.setPosition(7*16, 5*16);
-scene.loadMap(&quot;testMap&quot;);</property>
+scene.loadMap(&quot;testMap&quot;);
+scene.playSound(&quot;doorSound&quot;);</property>
    </properties>
   </object>
   <object id="4" gid="97" x="112.924" y="66.8152" width="16" height="16">
    <properties>
-    <property name="onCollide">scene.player.setPosition(30*16, 47*16);
-scene.loadMap(&quot;chaise-1&quot;);</property>
+    <property name="onCollide">scene.player.setPosition(30.5*16, 47*16);
+scene.loadMap(&quot;chaise-1&quot;);
+scene.playSound(&quot;doorSound&quot;);</property>
    </properties>
   </object>
  </objectgroup>
@@ -82,18 +84,41 @@ scene.loadMap(&quot;chaise-1&quot;);</property>
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,100,0,0,0,0,100,0,28,100,0,0,28,0,100,0,
 0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,28,0,
-0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,100,0,0,0,0,100,0,0,100,0,0,0,0,100,0,
 0,28,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer name="Float Layer" width="16" height="16">
+  <properties>
+   <property name="abovePlayer" type="bool" value="true"/>
+  </properties>
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,92,0,0,0,0,92,0,0,92,0,0,0,0,92,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>

@@ -49,6 +49,7 @@ body {
 		<img id="charactersRed" src="img/charactersRed.png" />
 		<img id="charactersWhite" src="img/charactersWhite.png" />\
         <img id="weapon" src="img/weapon.png" />
+        <audio id="doorSound" src="sounds/door.wav" preload="auto" controls></audio>
 </div>
 	
 </body>
@@ -134,6 +135,10 @@ function BoxCollider(width, height, parent) {
     		var tileID;
 
     		for(var i = 0; i < scene.tileRenderer.map.layers.length; i++) {
+
+    			if(scene.tileRenderer.map.layers[i].properties && scene.tileRenderer.map.layers[i].properties.abovePlayer == true) {
+    				continue;
+    			}
 
     			if(scene.tileRenderer.map.layers[i].type == "tilelayer") {
     				tileID = scene.tileRenderer.map.layers[i].data[Math.floor(position.x/16) + scene.tileRenderer.map.width*Math.floor((position.y - 16)/16)] - 1;
@@ -1039,9 +1044,11 @@ function TileRenderer() {
     this.map = {};
     this.img = document.getElementById("basicTiles");
 
-    this.tileBuffer = document.createElement('canvas');;
+    this.tileBuffer = document.createElement('canvas');
+    this.floatBuffer = document.createElement('canvas');
 
     this.tileContext = this.tileBuffer.getContext('2d');
+    this.floatContext = this.floatBuffer.getContext('2d');
 
 	this.loadMap = function(filename, scene) {
 
@@ -1054,7 +1061,9 @@ function TileRenderer() {
 
 
         this.tileBuffer = document.createElement('canvas');
+        this.floatBuffer = document.createElement('canvas');
         this.tileContext = this.tileBuffer.getContext('2d');
+        this.floatContext = this.floatBuffer.getContext('2d');
 
         $.ajaxSetup({async: false});
 
@@ -1078,6 +1087,9 @@ function TileRenderer() {
         this.tileBuffer.width = this.map.width * 16;
         this.tileBuffer.height = this.map.height * 16;
 
+        this.floatBuffer.width = this.map.width * 16;
+        this.floatBuffer.height = this.map.height * 16;
+
         for(var i = 0; i < this.map.layers.length; i++) {
 
                 if(this.map.layers[i].type == "tilelayer") {
@@ -1091,7 +1103,17 @@ function TileRenderer() {
                             var tX = tileID % 8;
                             var tY = Math.floor(tileID / 8);
 
-                            this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, x*16, y*16, this.map.tilewidth, this.map.tileheight);
+
+                            if(this.map.layers[i].properties && this.map.layers[i].properties.abovePlayer == true) {
+
+                            	this.floatContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, x*16, y*16, this.map.tilewidth, this.map.tileheight);
+
+                            } else {
+
+                            	this.tileContext.drawImage(this.img, tX * 16, tY * 16, this.map.tilewidth, this.map.tileheight, x*16, y*16, this.map.tilewidth, this.map.tileheight);
+
+                            }
+
 
 
                         }
@@ -1202,13 +1224,14 @@ function TileRenderer() {
     }
 
     this.Draw = function(scene) {
-        
-
+       
 
         ctx.drawImage(this.tileBuffer, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y + 16), this.map.width*this.map.tilewidth, this.map.height*this.map.tileheight);
+    }
 
+    this.DrawTopLayer = function(scene) {
 
-        
+    	ctx.drawImage(this.floatBuffer, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y + 16), this.map.width*this.map.tilewidth, this.map.height*this.map.tileheight);
 
 
     }
@@ -1283,6 +1306,14 @@ function Scene() {
         }
     }
 
+    this.playSound = function(soundName) {
+
+    	var element = document.getElementById(soundName);
+    	
+    	element.currentTime = 0;
+    	element.play();
+    }
+
 	this.Start = function() {
         this.GameObjects.push(this.tileRenderer);
         this.player = new Player();
@@ -1332,6 +1363,8 @@ function Scene() {
                 else if(j == this.layers) {this.GameObjects[i].Draw(this);}
             }
         }
+
+        this.tileRenderer.DrawTopLayer(this);
 
         //Draws UI above everything else
         this.drawUI();
