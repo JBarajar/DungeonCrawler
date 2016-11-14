@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="16" tileheight="16" nextobjectid="5">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="16" tileheight="16" nextobjectid="6">
  <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="512" columns="8">
   <image source="../img/basictiles.png" width="128" height="1024"/>
   <tile id="14">
@@ -43,6 +43,9 @@
    </properties>
   </tile>
  </tileset>
+ <tileset firstgid="513" name="spawnertiles" tilewidth="16" tileheight="16" tilecount="12" columns="3">
+  <image source="../img/dead.png" width="48" height="64"/>
+ </tileset>
  <layer name="Tile Layer 1" width="16" height="16">
   <data encoding="csv">
 81,82,82,82,82,82,82,82,82,82,82,82,82,82,82,81,
@@ -63,21 +66,6 @@
 81,24,24,24,24,24,24,14,14,24,24,24,24,24,24,81
 </data>
  </layer>
- <objectgroup name="Object Layer 1">
-  <object id="1" name="Door" gid="49" x="119" y="256" width="16" height="16">
-   <properties>
-    <property name="onCollide">scene.player.setPosition(7*16, 5*16);
-scene.loadMap(&quot;testMap&quot;);
-scene.playSound(&quot;doorSound&quot;);</property>
-   </properties>
-  </object>
-  <object id="4" gid="97" x="112.924" y="66.8152" width="16" height="16">
-   <properties>
-    <property name="onCollide">scene.player.setPosition(56.5*16, 70*16);
-scene.loadMap(&quot;chaise-1&quot;);</property>
-   </properties>
-  </object>
- </objectgroup>
  <layer name="Tile Layer 2" width="16" height="16">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -98,6 +86,22 @@ scene.loadMap(&quot;chaise-1&quot;);</property>
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup name="Object Layer 1">
+  <object id="1" name="Door" gid="49" x="119" y="256" width="16" height="16">
+   <properties>
+    <property name="onCollide">scene.player.setPosition(7*16, 5*16);
+scene.loadMap(&quot;testMap&quot;);
+scene.playSound(&quot;doorSound&quot;);</property>
+   </properties>
+  </object>
+  <object id="4" gid="97" x="112.924" y="66.8152" width="16" height="16">
+   <properties>
+    <property name="onCollide">scene.player.setPosition(56.5*16, 70*16);
+scene.loadMap(&quot;chaise-1&quot;);</property>
+   </properties>
+  </object>
+  <object id="5" name="Slime" type="Slime" gid="520" x="173" y="116" width="16" height="16"/>
+ </objectgroup>
  <layer name="Float Layer" width="16" height="16">
   <properties>
    <property name="abovePlayer" type="bool" value="true"/>

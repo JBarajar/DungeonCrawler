@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="60" tilewidth="16" tileheight="16" nextobjectid="2">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="60" tilewidth="16" tileheight="16" nextobjectid="4">
  <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="512" columns="8">
   <image source="../img/basictiles.png" width="128" height="1024"/>
   <tile id="14">
@@ -87,6 +87,9 @@
     <property name="isSolid" type="bool" value="true"/>
    </properties>
   </tile>
+ </tileset>
+ <tileset firstgid="513" name="spawnertiles" tilewidth="16" tileheight="16" tilecount="12" columns="3">
+  <image source="../img/dead.png" width="48" height="64"/>
  </tileset>
  <layer name="Tile Layer 1" width="50" height="60">
   <data encoding="csv">
@@ -223,6 +226,8 @@
 scene.loadMap(&quot;davies-1&quot;);</property>
    </properties>
   </object>
+  <object id="2" name="Slime" type="Slime" gid="520" x="668" y="701" width="16" height="16"/>
+  <object id="3" name="Skeleton" type="Skeleton" gid="519" x="581" y="698" width="16" height="16"/>
  </objectgroup>
  <layer name="Float layer" width="50" height="60">
   <properties>

@@ -24,7 +24,7 @@
         }, 
         {
          "draworder":"topdown",
-         "height":50,
+         "height":0,
          "name":"Object Layer 1",
          "objects":[
                 {
@@ -66,11 +66,35 @@
                  "width":16,
                  "x":815.5,
                  "y":484.5
+                }, 
+                {
+                 "gid":520,
+                 "height":16,
+                 "id":3,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":865,
+                 "y":976
+                }, 
+                {
+                 "gid":519,
+                 "height":16,
+                 "id":4,
+                 "name":"Skeleton",
+                 "rotation":0,
+                 "type":"Skeleton",
+                 "visible":true,
+                 "width":16,
+                 "x":862,
+                 "y":896
                 }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
-         "width":50,
+         "width":0,
          "x":0,
          "y":0
         }, 
@@ -93,7 +117,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":3,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
@@ -331,6 +355,19 @@
                  "isSolid":"bool"
                 }
             },
+         "tilewidth":16
+        }, 
+        {
+         "columns":3,
+         "firstgid":513,
+         "image":"..\/img\/dead.png",
+         "imageheight":64,
+         "imagewidth":48,
+         "margin":0,
+         "name":"spawnertiles",
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":16,
          "tilewidth":16
         }],
  "tilewidth":16,

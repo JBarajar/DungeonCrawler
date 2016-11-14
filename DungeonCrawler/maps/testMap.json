@@ -76,8 +76,32 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":96.5059057988626,
-                 "y":703.571866038011
+                 "x":96.5059,
+                 "y":703.572
+                }, 
+                {
+                 "gid":520,
+                 "height":16,
+                 "id":46,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":164,
+                 "y":96
+                }, 
+                {
+                 "gid":519,
+                 "height":16,
+                 "id":47,
+                 "name":"Skeleton",
+                 "rotation":0,
+                 "type":"Skeleton",
+                 "visible":true,
+                 "width":16,
+                 "x":77,
+                 "y":94
                 }],
          "opacity":1,
          "properties":
@@ -113,7 +137,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":46,
+ "nextobjectid":49,
  "orientation":"orthogonal",
  "properties":
     {
@@ -295,6 +319,19 @@
                  "isSolid":"bool"
                 }
             },
+         "tilewidth":16
+        }, 
+        {
+         "columns":3,
+         "firstgid":513,
+         "image":"..\/img\/dead.png",
+         "imageheight":64,
+         "imagewidth":48,
+         "margin":0,
+         "name":"spawner",
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":16,
          "tilewidth":16
         }],
  "tilewidth":16,

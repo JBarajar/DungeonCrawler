@@ -64,8 +64,20 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":112.924104832259,
-                 "y":66.8152260857291
+                 "x":112.924,
+                 "y":66.8152
+                }, 
+                {
+                 "gid":520,
+                 "height":16,
+                 "id":5,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":173,
+                 "y":116
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -93,7 +105,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
@@ -179,6 +191,19 @@
                  "isSolid":"bool"
                 }
             },
+         "tilewidth":16
+        }, 
+        {
+         "columns":3,
+         "firstgid":513,
+         "image":"..\/img\/dead.png",
+         "imageheight":64,
+         "imagewidth":48,
+         "margin":0,
+         "name":"spawnertiles",
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":16,
          "tilewidth":16
         }],
  "tilewidth":16,

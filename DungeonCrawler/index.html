@@ -340,46 +340,7 @@ function Key() {
 }
 
 function Enemy(x, y) {
-	this.type = "Enemy";
-	this.transform = new Transform();
-    this.layer = 1;
 	
-	this.transform.position.x = x;
-	this.transform.position.y = y;
-    this.active = false;
-    this.activationRange = 7*16;
-
-    this.isDead = false;
-    this.health = 100;
-
-    this.drawHealth = true;
-
-    this.smoothMove = true;
-    //DONT SET SPEED HIGHER THAN 1.0
-    if(this.smoothMove) this.speed = 0.8;
-    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
-
-    this.damage = 10;
-	//this.img = document.getElementById("chest");
-	this.path;
-	this.n = 0;
-	this.playerPos = new Vector2();
-	this.playerPos.x;
-	this.playerPos.y;
-    this.prevX = this.transform.position.x;
-    this.prevY = this.transform.position.y;
-    this.tO = 8;
-
-    this.knockBack = false;
-    this.resetingKB = false;
-    this.kbPos = new Vector2();
-
-    this.img = document.getElementById("characters");
-    this.imgRed = document.getElementById("charactersRed");
-    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
-    this.frame = 0;
-
-    this.drawPath = false;
 
     this.die = function(scene, imgPosX, imgPosY) {
       this.isDead = true;
@@ -518,6 +479,48 @@ function Enemy(x, y) {
 Slime.prototype = new Enemy();
 Slime.prototype.constructor = Slime;
 function Slime(x,y) {
+
+    this.type = "Enemy";
+    this.transform = new Transform();
+    this.layer = 1;
+    
+    this.transform.position.x = x;
+    this.transform.position.y = y;
+    this.active = false;
+    this.activationRange = 7*16;
+
+    this.isDead = false;
+    this.health = 100;
+
+    this.drawHealth = true;
+
+    this.smoothMove = true;
+    //DONT SET SPEED HIGHER THAN 1.0
+    if(this.smoothMove) this.speed = 0.8;
+    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
+
+    this.damage = 10;
+    //this.img = document.getElementById("chest");
+    this.path;
+    this.n = 0;
+    this.playerPos = new Vector2();
+    this.playerPos.x;
+    this.playerPos.y;
+    this.prevX = this.transform.position.x;
+    this.prevY = this.transform.position.y;
+    this.tO = 8;
+
+    this.knockBack = false;
+    this.resetingKB = false;
+    this.kbPos = new Vector2();
+
+    this.img = document.getElementById("characters");
+    this.imgRed = document.getElementById("charactersRed");
+    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+    this.frame = 0;
+
+    this.drawPath = false;
+
     this.transform.position.x = x;
     this.transform.position.y = y;
     this.boxCollider = new BoxCollider(15, 15, this);
@@ -618,6 +621,48 @@ function Slime(x,y) {
 Skeleton.prototype = new Enemy();
 Skeleton.prototype.constructor = Skeleton;
 function Skeleton(x,y) {
+
+    this.type = "Enemy";
+    this.transform = new Transform();
+    this.layer = 1;
+    
+    this.transform.position.x = x;
+    this.transform.position.y = y;
+    this.active = false;
+    this.activationRange = 7*16;
+
+    this.isDead = false;
+    this.health = 100;
+
+    this.drawHealth = true;
+
+    this.smoothMove = true;
+    //DONT SET SPEED HIGHER THAN 1.0
+    if(this.smoothMove) this.speed = 0.8;
+    else this.speed = 0.1; //getRandomArbitrary(0.07, 0.1);
+
+    this.damage = 10;
+    //this.img = document.getElementById("chest");
+    this.path;
+    this.n = 0;
+    this.playerPos = new Vector2();
+    this.playerPos.x;
+    this.playerPos.y;
+    this.prevX = this.transform.position.x;
+    this.prevY = this.transform.position.y;
+    this.tO = 8;
+
+    this.knockBack = false;
+    this.resetingKB = false;
+    this.kbPos = new Vector2();
+
+    this.img = document.getElementById("characters");
+    this.imgRed = document.getElementById("charactersRed");
+    this.facing = 0; //0 - down; 1 - left; 2 - right; 3 - up
+    this.frame = 0;
+
+    this.drawPath = false;
+
     this.transform.position.x = x;
     this.transform.position.y = y;
     this.boxCollider = new BoxCollider(15, 15, this);
@@ -1417,6 +1462,7 @@ function TileRenderer() {
 
 
                 } else if(this.map.layers[i].type == "objectgroup") {
+
                     for(var o = 0; o < this.map.layers[i].objects.length; o++) {
 
                         var gID = this.map.layers[i].objects[o].gid - 1;
@@ -1430,9 +1476,14 @@ function TileRenderer() {
                         imgCtx.drawImage(this.img, tX * 16, tY * 16, 16, 16, 0, 0, 16, 16);
 
                         if(this.map.layers[i].objects[o].type == "Slime") {
-                        	//Scene.GameObjects.push(new Enemy(this.map.layers[i].objects[o].x,this.map.layers[i].objects[o].y));
+                        	scene.GameObjects.push(new Slime(this.map.layers[i].objects[o].x,this.map.layers[i].objects[o].y));
+                            scene.GameObjects[Scene.GameObjects.length-1].Start(scene);
 
 
+                        }
+                        else if(this.map.layers[i].objects[o].type == "Skeleton") {
+                            scene.GameObjects.push(new Skeleton(this.map.layers[i].objects[o].x,this.map.layers[i].objects[o].y));
+                            scene.GameObjects[Scene.GameObjects.length-1].Start(scene);
                         } else {
                         	var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
 
@@ -1655,9 +1706,9 @@ function Scene() {
         this.tileRenderer.Start(this);
 
         //-----Add other GameObjects Here-----
-        this.enemy = new Skeleton(7*16,6*16);
-        this.GameObjects.push(this.enemy);
-        this.GameObjects.push(new Slime(9*16,5*16));
+        //this.enemy = new Skeleton(7*16,6*16);
+        //this.GameObjects.push(this.enemy);
+        //this.GameObjects.push(new Slime(9*16,5*16));
 
         //Skips TileRenderer at index 0 since already done above
 		for(var i = 1; i < this.GameObjects.length; i++) {
@@ -1924,12 +1975,12 @@ function createPath(a , b, scene) {
 
 function rayCast(scene, a, b) {
     this.transform = new Transform();
-    this.transform.position.x = a.transform.position.x+8;
-    this.transform.position.y = a.transform.position.y+8;
+    this.transform.position.x = a.transform.position.x;
+    this.transform.position.y = a.transform.position.y;
     this.target = new Transform();
-    this.target.position.x = b.transform.position.x+8;
-    this.target.position.y = b.transform.position.y+8;
-    this.boxCollider = new BoxCollider(1,1,this);
+    this.target.position.x = b.transform.position.x;
+    this.target.position.y = b.transform.position.y;
+    this.boxCollider = new BoxCollider(16,16,this);
     this.hit = false;
     this.clear = false;
 
