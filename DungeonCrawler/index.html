@@ -57,6 +57,7 @@ body {
 		<img id="charactersRed" src="img/charactersRed.png" />
 		<img id="charactersWhite" src="img/charactersWhite.png" />\
         <img id="weapon" src="img/weapon.png" />
+        <img id="arrow" src="img/arrow.png" />
         <img id="dead" src="img/dead.png" />
         <audio id="doorSound" src="sounds/door.wav" preload="auto"></audio>
         <audio id="swingSound" src="sounds/swing.wav" preload="auto"></audio>
@@ -342,7 +343,7 @@ function Enemy(x, y) {
 	this.type = "Enemy";
 	this.transform = new Transform();
     this.layer = 1;
-	this.boxCollider = new BoxCollider(15, 15, this);
+	
 	this.transform.position.x = x;
 	this.transform.position.y = y;
     this.active = false;
@@ -365,9 +366,9 @@ function Enemy(x, y) {
 	this.playerPos = new Vector2();
 	this.playerPos.x;
 	this.playerPos.y;
-    var prevX = this.transform.position.x;
-    var prevY = this.transform.position.y;
-    var tO = 8;
+    this.prevX = this.transform.position.x;
+    this.prevY = this.transform.position.y;
+    this.tO = 8;
 
     this.knockBack = false;
     this.resetingKB = false;
@@ -380,14 +381,14 @@ function Enemy(x, y) {
 
     this.drawPath = false;
 
-    this.die = function(scene) {
+    this.die = function(scene, imgPosX, imgPosY) {
       this.isDead = true;
-      scene.GameObjects.push(new DeadObject(this.transform.position, 1*16,2*16));
+      scene.GameObjects.push(new DeadObject(this.transform.position, imgPosX, imgPosY));
     }
 
     this.refreshPath = function(scene) {
-        this.playerPos.x = scene.player.transform.position.x+tO;
-        this.playerPos.y = scene.player.transform.position.y+tO;
+        this.playerPos.x = scene.player.transform.position.x+this.tO;
+        this.playerPos.y = scene.player.transform.position.y+this.tO;
         this.path = createPath(this,scene.player,scene);
                 
         if(this.path.length < 2) {
@@ -406,13 +407,13 @@ function Enemy(x, y) {
 
 	this.Move = function(target,scene) {
 		//Store previous values of X and Y (for collisions)
-		prevX = this.transform.position.x;
-		prevY = this.transform.position.y;
+		this.prevX = this.transform.position.x;
+		this.prevY = this.transform.position.y;
 		if(Math.abs(this.transform.position.x - target.tile.x*16) < 1.0 && Math.abs(this.transform.position.y - target.tile.y*16) < 1.0) {
 			this.transform.position.x = target.tile.x*16;
 			this.transform.position.y = target.tile.y*16;
 
-			if(Math.floor(this.playerPos.x/16) != Math.floor((scene.player.transform.position.x+tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((scene.player.transform.position.y+tO)/16)) {
+			if(Math.floor(this.playerPos.x/16) != Math.floor((scene.player.transform.position.x+this.tO)/16) || Math.floor(this.playerPos.y/16) != Math.floor((scene.player.transform.position.y+this.tO)/16)) {
 				this.refreshPath(scene);
 			}
 
@@ -427,7 +428,7 @@ function Enemy(x, y) {
             else if(target.tile.x*16 - this.transform.position.x < 0) this.transform.position.x -= this.speed;
         }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-			this.transform.position.x = prevX;
+			this.transform.position.x = this.prevX;
 
 		}
 		if(!this.smoothMove) this.transform.position.y = lerp2(this.transform.position.y, target.tile.y*16, this.speed);
@@ -436,59 +437,111 @@ function Enemy(x, y) {
             else if(target.tile.y*16 - this.transform.position.y < 0)this.transform.position.y -= this.speed;
         }
 		if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-			this.transform.position.y = prevY;
+			this.transform.position.y = this.prevY;
 
 		}
 	}
 
     this.setFacing = function() {
-        if(this.transform.position.y - prevY > 0) {
+        if(this.transform.position.y - this.prevY > 0) {
             this.facing = 0;
         }
-        else if(this.transform.position.y - prevY < 0){
+        else if(this.transform.position.y - this.prevY < 0){
             this.facing = 3;
         }
 
-        if(this.transform.position.x - prevX > 0) {
+        if(this.transform.position.x - this.prevX > 0) {
             this.facing = 2;
         }
-        else if(this.transform.position.x - prevX < 0){
+        else if(this.transform.position.x - this.prevX < 0){
             this.facing = 1;
         }
 
     }
 
+    this.setIdleFacing = function(scene) {
+        if(Math.abs(this.transform.position.y - scene.player.transform.position.y) > Math.abs(this.transform.position.x - scene.player.transform.position.x)) {
+            if(this.transform.position.y - scene.player.transform.position.y < 0) {
+                this.facing = 0;
+            }
+            else if(this.transform.position.y - scene.player.transform.position.y > 0){
+                this.facing = 3;
+            }
+        }
+        else {
+            if(this.transform.position.x - scene.player.transform.position.x < 0) {
+                this.facing = 2;
+            }
+            else if(this.transform.position.x - scene.player.transform.position.x > 0){
+                this.facing = 1;
+            }
+        }
+
+        
+
+    }
+
     this.getHit = function(collider) {
             if(!this.knockBack) {
+                
+                this.kbPos.x = this.transform.position.x - ((collider.transform.position.x - this.transform.position.x) * 2);
+                this.kbPos.y = this.transform.position.y - ((collider.transform.position.y - this.transform.position.y) * 2);
                 this.knockBack = true;
-                this.kbPos.x = this.transform.position.x - ((collider.boxPos.x - this.transform.position.x) * 2);
-                this.kbPos.y = this.transform.position.y - ((collider.boxPos.y - this.transform.position.y) * 2);
                 this.health -= collider.damage;
               }
     }
 
-	this.onCollide = function(scene, collider) {
-        if(collider.type == "StaticProp") {
-            collider.onCollide(scene, this);
-        }
-		if(collider.type == "Enemy") {
-			//return true;
+    this.onCollide = function(scene, collider) {
 
-		}
-        else if(collider.type == "Attack") {
-            this.getHit(collider);
-        }
-	}
+    }
+
+	
 
 	this.Start = function(scene) {
-		this.playerPos.x = scene.player.transform.position.x+tO;
-		this.playerPos.y = scene.player.transform.position.y+tO;
-		this.path = createPath(this,scene.player,scene);
-
+		
 
 	}
 
 	this.Update = function(scene) {
+        
+   
+    }
+
+	this.Draw = function(scene) {
+
+        
+	}
+        
+
+}
+
+Slime.prototype = new Enemy();
+Slime.prototype.constructor = Slime;
+function Slime(x,y) {
+    this.transform.position.x = x;
+    this.transform.position.y = y;
+    this.boxCollider = new BoxCollider(15, 15, this);
+
+    this.Start = function(scene) {
+        this.playerPos.x = scene.player.transform.position.x+this.tO;
+        this.playerPos.y = scene.player.transform.position.y+this.tO;
+        this.path = createPath(this,scene.player,scene);
+    }
+
+    this.onCollide = function(scene, collider) {
+        if(collider.type == "StaticProp") {
+            collider.onCollide(scene, this);
+        }
+        if(collider.type == "Enemy") {
+            //return true;
+
+        }
+        if(collider.type == "Attack") {
+            this.getHit(collider);
+        }
+    }
+
+    this.Update = function(scene) {
         if(!this.active && Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.activationRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.activationRange && rayCast(scene,this,scene.player)) {
             this.active = true;
         }
@@ -498,25 +551,25 @@ function Enemy(x, y) {
 
         // Checks if enemy is dead
         if (this.health <= 0) {
-          this.die(scene);
+          this.die(scene,1*16,2*16);
         }
         
         if(!this.knockBack) {
             if(this.active) {
                 this.frame += scene.deltaTime*0.01;
                 this.frame = this.frame % 3;
-        		this.Move(this.path[this.n],scene);
+                this.Move(this.path[this.n],scene);
                 this.setFacing();
             }
         }
         else {
 
-            prevX = this.transform.position.x;
-            prevY = this.transform.position.y;
+            this.prevX = this.transform.position.x;
+            this.prevY = this.transform.position.y;
 
             this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, 0.1);
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.y = prevY;
+                this.transform.position.y = this.prevY;
                 if(!this.resetingKB) {
                     this.resetingKB = true;
                     setTimeout(this.resetKnockBack.bind(this), 500);
@@ -524,7 +577,7 @@ function Enemy(x, y) {
             }
             this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, 0.1);
             if(this.boxCollider.checkCollision(scene, this.transform.position)) {
-                this.transform.position.x = prevX;
+                this.transform.position.x = this.prevX;
                 if(!this.resetingKB) {
                     this.resetingKB = true;
                     setTimeout(this.resetKnockBack.bind(this), 500);
@@ -536,11 +589,8 @@ function Enemy(x, y) {
                 this.refreshPath(scene);
             }
         }
-   
     }
-
-	this.Draw = function(scene) {
-
+    this.Draw = function(scene) {
         if(this.drawPath) {
             ctx.fillStyle = "white";
             for(var i = 0; i < this.path.length; i++) {
@@ -553,7 +603,7 @@ function Enemy(x, y) {
         }
 
 
-		ctx.fillStyle = "green";
+        ctx.fillStyle = "green";
         if(this.knockBack) ctx.drawImage(this.imgRed,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         else ctx.drawImage(this.img,  (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         if(this.drawHealth && this.health < 100) {
@@ -562,9 +612,200 @@ function Enemy(x, y) {
           ctx.fillStyle = "red";
           ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,2.5);
         }
-	}
-        
+    }
+}
 
+Skeleton.prototype = new Enemy();
+Skeleton.prototype.constructor = Skeleton;
+function Skeleton(x,y) {
+    this.transform.position.x = x;
+    this.transform.position.y = y;
+    this.boxCollider = new BoxCollider(10, 15, this);
+    this.atkRange = 12*16;
+    this.canAttack = true;
+    this.moving = true;
+
+    this.Start = function(scene) {
+        this.playerPos.x = scene.player.transform.position.x+this.tO;
+        this.playerPos.y = scene.player.transform.position.y+this.tO;
+        this.path = createPath(this,scene.player,scene);
+    }
+
+    this.onCollide = function(scene, collider) {
+        if(collider.type == "StaticProp") {
+            collider.onCollide(scene, this);
+        }
+        if(collider.type == "Enemy") {
+            //return true;
+
+        }
+        if(collider.type == "Attack") {
+            if(collider.parent != this) this.getHit(collider);
+        }
+    }
+
+    this.resetAtk = function() {
+        this.canAttack = true;
+        this.refreshPath(Scene);
+    }
+
+    this.Update = function(scene) {
+        if(!this.active && Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.activationRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.activationRange && rayCast(scene,this,scene.player)) {
+            this.active = true;
+            
+        }
+
+        if(this.transform.position.y < scene.player.transform.position.y) this.layer = 2;
+        else this.layer = 0;
+
+        // Checks if enemy is dead
+        if (this.health <= 0) {
+          this.die(scene, 0, 2*16);
+        }
+        
+        if(!this.knockBack) {
+            if(this.active) {
+                if(this.moving) {
+                    this.frame += scene.deltaTime*0.01;
+                    this.frame = this.frame % 3;
+                }
+                else this.frame = 1;
+
+                if(Math.abs(this.transform.position.x - scene.player.transform.position.x) > this.atkRange || Math.abs(this.transform.position.y - scene.player.transform.position.y) > this.atkRange || !rayCast(scene,this,scene.player)) {
+                    this.Move(this.path[this.n],scene);
+                    this.setFacing();
+                    if(!this.moving) this.moving = true;
+                }
+                else{
+                    this.moving = false;
+                    this.setIdleFacing(scene);
+                } 
+                
+                
+                if(Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.atkRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.atkRange && rayCast(scene,this,scene.player) && this.canAttack) {
+                    this.setIdleFacing(scene);
+                    scene.GameObjects.push(new Arrow(this, this.facing, this.transform.position,10, scene.player));
+                    this.canAttack = false;
+                    setTimeout(this.resetAtk.bind(this), 2000);
+                }
+            }
+        }
+        else {
+
+            this.prevX = this.transform.position.x;
+            this.prevY = this.transform.position.y;
+
+            this.transform.position.y = lerp2(this.transform.position.y, this.kbPos.y, 0.1);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.y = this.prevY;
+                if(!this.resetingKB) {
+                    this.resetingKB = true;
+                    setTimeout(this.resetKnockBack.bind(this), 500);
+                }
+            }
+            this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, 0.1);
+            if(this.boxCollider.checkCollision(scene, this.transform.position)) {
+                this.transform.position.x = this.prevX;
+                if(!this.resetingKB) {
+                    this.resetingKB = true;
+                    setTimeout(this.resetKnockBack.bind(this), 500);
+                }
+            }
+
+            if(Math.abs(this.transform.position.x - this.kbPos.x) < 1 && Math.abs(this.transform.position.y - this.kbPos.y) < 1) {
+                this.knockBack = false;
+                this.refreshPath(scene);
+            }
+        }
+    }
+    this.Draw = function(scene) {
+        if(this.drawPath) {
+            ctx.fillStyle = "white";
+            for(var i = 0; i < this.path.length; i++) {
+                ctx.globalAlpha = 0.2;
+                ctx.fillRect(Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16 - scene.Camera.transform.position.y + scene.Camera.offset.y),16,16);
+                ctx.globalAlpha = 1.0;
+                ctx.fillText(i, Math.floor(this.path[i].tile.x*16 - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.path[i].tile.y*16+8 - scene.Camera.transform.position.y + scene.Camera.offset.y));
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+
+        ctx.fillStyle = "green";
+        if(this.knockBack) ctx.drawImage(this.imgRed,  (Math.floor(this.frame)*16) + 9*16, this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        else ctx.drawImage(this.img,  (Math.floor(this.frame)*16) + 9*16, this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        if(this.drawHealth && this.health < 100) {
+          ctx.fillStyle = "#000";
+          ctx.fillRect(Math.floor((this.transform.position.x - 1) - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+15) - scene.Camera.transform.position.y + scene.Camera.offset.y),(112)/6,5);
+          ctx.fillStyle = "red";
+          ctx.fillRect(Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y+16) - scene.Camera.transform.position.y + scene.Camera.offset.y),this.health/6,2.5);
+        }
+    }
+}
+
+function Arrow(parent,dir,pos,damage,target) {
+    this.transform = new Transform();
+    this.parent = parent;
+    this.tPos = new Vector2();
+    this.tPos.x = target.transform.position.x;
+    this.tPos.y = target.transform.position.y;
+    this.isDead = false;
+    this.type = "Attack";
+    this.img = document.getElementById("arrow");
+    this.boxCollider = new BoxCollider(15,15,this);
+    this.boxPos = new Vector2();
+    this.damage = damage;
+    //this.arrowOffset = 32;
+    var tileSize = 16;
+
+    this.onCollide = function(scene, collider) {
+        if(collider.type == "Enemy" && collider != parent) {
+            collider.getHit(this);
+            
+        }
+        this.isDead = true;
+        
+    }
+
+    if (dir == 3) {
+        this.transform.position.x = pos.x;
+        this.transform.position.y = pos.y - tileSize;
+        //this.tPos.y -= 32;
+    }
+
+    if (dir == 0) {
+        this.transform.position.x = pos.x;
+        this.transform.position.y = pos.y + tileSize;
+        //this.tPos.y += 32;
+    }
+  
+    if (dir == 1) {
+        this.transform.position.x = pos.x - tileSize;
+        this.transform.position.y = pos.y;
+        //this.tPos.x -= 32;
+    }
+  
+    if (dir == 2) {
+        this.transform.position.x = pos.x + tileSize;
+        this.transform.position.y = pos.y;
+        //this.tPos.y += 32;
+    }
+
+    this.Start = function(scene) {
+
+    }
+    this.Update = function(scene) {
+        this.transform.position = lerp(this.transform.position, this.tPos, 0.05);
+        if(this.boxCollider.checkCollision(Scene, this.transform.position)) {
+            this.isDead = true;
+        }
+        if(Math.abs(this.transform.position.x - this.tPos.x) < 1 && Math.abs(this.transform.position.y - this.tPos.y) < 1) {
+            this.isDead = true;
+        }
+    }
+    this.Draw = function(scene) {
+        ctx.drawImage(this.img, dir*16, 0, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+    }
 }
 
 function DeadObject(pos,imgPosX,imgPosY) {
@@ -667,13 +908,14 @@ function Door(x, y) {
 
 }
 
-function Swing(dir,pos,damage) {
+function Swing(parent, dir,pos,damage) {
   this.type = "Attack";
-  var tileSize = 9;
+  var tileSize = 11;
+  this.parent = parent;
   this.boxCollider = new BoxCollider(16,16,this);
   this.boxCollider.isTrigger = true;
   this.boxCollider.ignorePlayer = true;
-  this.boxPos = new Vector2();
+  this.transform = new Transform();
   this.damage = damage;
 
   this.onCollide = function(scene, collider) {
@@ -681,26 +923,29 @@ function Swing(dir,pos,damage) {
         console.log("attacked Enemy");
         collider.onCollide(scene, this);
     }
+    /*if(collider.type == "Attack") {
+        collider.onCollide(scene, this);
+    }*/
   }
 
   if (dir == 3) {
-    this.boxPos.x = pos.x;
-    this.boxPos.y = pos.y - tileSize;
+    this.transform.position.x = pos.x;
+    this.transform.position.y = pos.y - tileSize;
   }
 
   if (dir == 0) {
-    this.boxPos.x = pos.x;
-    this.boxPos.y = pos.y + tileSize;
+    this.transform.position.x = pos.x;
+    this.transform.position.y = pos.y + tileSize;
   }
   
   if (dir == 1) {
-    this.boxPos.x = pos.x - tileSize;
-    this.boxPos.y = pos.y;
+    this.transform.position.x = pos.x - tileSize;
+    this.transform.position.y = pos.y;
   }
   
   if (dir == 2) {
-    this.boxPos.x = pos.x + tileSize;
-    this.boxPos.y = pos.y;
+    this.transform.position.x = pos.x + tileSize;
+    this.transform.position.y = pos.y;
   }
 
   /*if (dir == "up left") {
@@ -723,7 +968,7 @@ function Swing(dir,pos,damage) {
     this.boxPos.y = pos.y + tileSize;
   }*/
 
-  this.boxCollider.checkCollision(Scene, this.boxPos);
+  this.boxCollider.checkCollision(Scene, this.transform.position);
 
   
   
@@ -835,6 +1080,9 @@ function Player() {
 			if(collider.type == "Enemy") {
 				this.getHit(collider);
 			}
+            if(collider.type == "Attack") {
+                this.getHit(collider);
+            }
 		}
 	}
 
@@ -994,7 +1242,7 @@ function Player() {
                 if(this.attacking) {
                     this.atkframe += 0.3;
                     // Damage is now 20
-                    if(this.atkframe > 1) {swing = new Swing(this.facing, this.transform.position, 20);}
+                    if(this.atkframe > 1) {swing = new Swing(this,this.facing, this.transform.position, 20);}
                     if(this.atkframe > 3) this.attacking = false;
                 }
             }
@@ -1407,9 +1655,9 @@ function Scene() {
         this.tileRenderer.Start(this);
 
         //-----Add other GameObjects Here-----
-        this.enemy = new Enemy(7*16,6*16);
+        this.enemy = new Skeleton(7*16,6*16);
         this.GameObjects.push(this.enemy);
-        //this.GameObjects.push(new Enemy(7,7));
+        this.GameObjects.push(new Slime(9*16,5*16));
 
         //Skips TileRenderer at index 0 since already done above
 		for(var i = 1; i < this.GameObjects.length; i++) {
@@ -1689,7 +1937,8 @@ function rayCast(scene, a, b) {
         if(collider == b) {
             this.clear = true;
         }
-        if(collider != a) {
+        if(collider.type == "Enemy" || collider.type == "Attack") return false;
+        else if(collider != a) {
             return true;
         }
         
