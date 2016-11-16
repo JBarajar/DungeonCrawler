@@ -90,6 +90,18 @@
                  "width":16,
                  "x":277,
                  "y":716
+                }, 
+                {
+                 "gid":524,
+                 "height":16,
+                 "id":6,
+                 "name":"Boss",
+                 "rotation":0,
+                 "type":"Boss",
+                 "visible":true,
+                 "width":16,
+                 "x":223,
+                 "y":112
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -117,7 +129,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":6,
+ "nextobjectid":7,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,
