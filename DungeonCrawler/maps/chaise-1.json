@@ -76,8 +76,8 @@
                  "type":"Slime",
                  "visible":true,
                  "width":16,
-                 "x":865,
-                 "y":976
+                 "x":783,
+                 "y":913
                 }, 
                 {
                  "gid":519,
@@ -88,8 +88,20 @@
                  "type":"Skeleton",
                  "visible":true,
                  "width":16,
-                 "x":862,
-                 "y":896
+                 "x":928,
+                 "y":880
+                }, 
+                {
+                 "gid":519,
+                 "height":16,
+                 "id":5,
+                 "name":"Skeleton",
+                 "rotation":0,
+                 "type":"Skeleton",
+                 "visible":true,
+                 "width":16,
+                 "x":658,
+                 "y":864
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -117,7 +129,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,

@@ -76,8 +76,20 @@
                  "type":"Slime",
                  "visible":true,
                  "width":16,
-                 "x":173,
-                 "y":116
+                 "x":183,
+                 "y":106
+                }, 
+                {
+                 "gid":520,
+                 "height":16,
+                 "id":6,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":60,
+                 "y":103
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -105,7 +117,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":6,
+ "nextobjectid":7,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tileheight":16,

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="64" tilewidth="16" tileheight="16" nextobjectid="49">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="32" height="64" tilewidth="16" tileheight="16" nextobjectid="50">
  <properties>
   <property name="backgroundMusic" value="music-dungeon"/>
  </properties>
@@ -251,15 +251,15 @@ scene.loadMap(&quot;testMap2&quot;);
 scene.playSound(&quot;doorSound&quot;);</property>
    </properties>
   </object>
-  <object id="42" name="Chest" gid="37" x="119.016" y="156.185" width="16" height="16"/>
   <object id="45" name="Staircase (to Davies-1)" gid="84" x="96.5059" y="703.572" width="16" height="16">
    <properties>
     <property name="onCollide">scene.player.setPosition(31*16, 44*16);
 scene.loadMap(&quot;davies-1&quot;);</property>
    </properties>
   </object>
-  <object id="46" name="Slime" type="Slime" gid="520" x="164" y="96" width="16" height="16"/>
-  <object id="47" name="Skeleton" type="Skeleton" gid="519" x="77" y="94" width="16" height="16"/>
+  <object id="46" name="Slime" type="Slime" gid="520" x="259" y="182" width="16" height="16"/>
+  <object id="47" name="Skeleton" type="Skeleton" gid="519" x="267" y="457" width="16" height="16"/>
+  <object id="49" name="Slime" type="Slime" gid="520" x="265" y="701" width="16" height="16"/>
  </objectgroup>
  <layer name="Float layer" width="32" height="64">
   <properties>

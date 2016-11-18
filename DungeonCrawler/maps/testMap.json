@@ -48,18 +48,6 @@
                  "y":50.8333
                 }, 
                 {
-                 "gid":37,
-                 "height":16,
-                 "id":42,
-                 "name":"Chest",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":119.016,
-                 "y":156.185
-                }, 
-                {
                  "gid":84,
                  "height":16,
                  "id":45,
@@ -88,8 +76,8 @@
                  "type":"Slime",
                  "visible":true,
                  "width":16,
-                 "x":164,
-                 "y":96
+                 "x":259,
+                 "y":182
                 }, 
                 {
                  "gid":519,
@@ -100,8 +88,20 @@
                  "type":"Skeleton",
                  "visible":true,
                  "width":16,
-                 "x":77,
-                 "y":94
+                 "x":267,
+                 "y":457
+                }, 
+                {
+                 "gid":520,
+                 "height":16,
+                 "id":49,
+                 "name":"Slime",
+                 "rotation":0,
+                 "type":"Slime",
+                 "visible":true,
+                 "width":16,
+                 "x":265,
+                 "y":701
                 }],
          "opacity":1,
          "properties":
@@ -137,7 +137,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":49,
+ "nextobjectid":50,
  "orientation":"orthogonal",
  "properties":
     {

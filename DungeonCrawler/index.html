@@ -61,9 +61,12 @@ body {
         <img id="arrow" src="img/arrow.png" />
         <img id="slash" src="img/slash.png" />
         <img id="dead" src="img/dead.png" />
+        <img id="barrier" src="img/barrier.png" />
         <audio id="doorSound" src="sounds/door.wav" preload="auto"></audio>
         <audio id="swingSound" src="sounds/swing.wav" preload="auto"></audio>
         <audio id="music" title="music-dungeon" src="sounds/music-dungeon.mp3" preload="auto" loop></audio>
+        <audio id="music" title="music-boss" src="sounds/music-boss.mp3" preload="auto" loop></audio>
+        <audio id="music" title="music-savepoint" src="sounds/music-savepoint.mp3" preload="auto" loop></audio>
 </div>
 	
 </body>
@@ -536,6 +539,7 @@ function Slime(x,y) {
     this.onCollide = function(scene, collider) {
         if(collider.type == "StaticProp") {
             collider.onCollide(scene, this);
+            return true;
         }
         if(collider.type == "Enemy") {
             //return true;
@@ -548,6 +552,7 @@ function Slime(x,y) {
 
     this.Update = function(scene) {
         if(!this.active && Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.activationRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.activationRange && rayCast(scene,this,scene.player)) {
+            this.refreshPath(scene);
             this.active = true;
         }
 
@@ -681,6 +686,7 @@ function Skeleton(x,y) {
     this.onCollide = function(scene, collider) {
         if(collider.type == "StaticProp") {
             collider.onCollide(scene, this);
+            return true;
         }
         if(collider.type == "Enemy") {
             //return true;
@@ -875,7 +881,6 @@ function Slash(parent,dir,pos,damage,target) {
     var tileSize = 16;
 
     this.onCollide = function(scene, collider) {
-        console.log(collider instanceof Boss);
         if(collider instanceof Boss) {
             return false;
         }
@@ -1005,6 +1010,18 @@ function Boss(x,y) {
 
     this.phasestart = 100;
     this.phase2 = false;
+    this.hcheck1 = false;
+    this.hcheck2 = false;
+
+    this.teleporting = false;
+    //Boss teleporting points
+    this.point1 = new Vector2();
+    this.point1.x = 13*16;
+    this.point1.y = 7*16; 
+    this.point2 = new Vector2();
+    this.point2.x = 14*16;
+    this.point2.y = 18*16;
+    this.reverse = false;
 
     this.Start = function(scene) {
         this.playerPos.x = scene.player.transform.position.x+this.tO;
@@ -1015,12 +1032,13 @@ function Boss(x,y) {
     this.onCollide = function(scene, collider) {
         if(collider.type == "StaticProp") {
             collider.onCollide(scene, this);
+            return true;
         }
         if(collider.type == "Enemy") {
             //return true;
 
         }
-        if(collider.type == "Attack" && !(collider instanceof Slash)) {
+        if(collider.type == "Attack" && !(collider instanceof Slash) && !this.teleporting) {
             this.getHit(collider);
         }
     }
@@ -1030,17 +1048,82 @@ function Boss(x,y) {
         this.refreshPath(Scene);
     }
 
+    this.teleport = function() {
+
+        if(this.teleporting == false) {
+            this.teleporting = true;
+            this.frame = 0;
+        }
+
+        if(!this.reverse) {
+            this.frame += 0.2;
+        }
+        else this.frame -= 0.2;
+
+        if(this.frame  > 3) {
+            this.frame = 3;
+            this.jump();
+            this.refreshPath(Scene);
+            this.reverse = true;
+        }
+        if(this.frame < 0 && this.reverse) {
+            this.frame = 0;
+            this.reverse = false;
+            this.teleporting = false;
+        }
+        
+    }
+
+    this.jump = function() {
+        var x1 = Math.abs(this.transform.position.x - this.point1.x);
+        var x2 = Math.abs(this.transform.position.x - this.point2.x);
+        var y1 = Math.abs(this.transform.position.y - this.point1.y);
+        var y2 = Math.abs(this.transform.position.y - this.point2.y);
+        if((x1 + y1) > (x2 + y2)) {
+            this.transform.position.x = this.point1.x;
+            this.transform.position.y = this.point1.y;
+        }
+
+        else {
+            this.transform.position.x = this.point2.x;
+            this.transform.position.y = this.point2.y;
+        }
+        
+    }
+
     this.Update = function(scene) {
         if(!this.active && Math.abs(this.transform.position.x - scene.player.transform.position.x) < this.activationRange && Math.abs(this.transform.position.y - scene.player.transform.position.y) < this.activationRange && rayCast(scene,this,scene.player)) {
             this.active = true;
             scene.drawBossHealth = true;
+            scene.SpawnBarriers();
+            scene.playMusic("music-boss");
         }
 
         if(this.transform.position.y < scene.player.transform.position.y) this.layer = 2;
         else this.layer = 0;
 
-        if(this.health < 200) this.atkSpeed = 800;
-        if(this.health < 150) this.atkSpeed = 600;
+        if(this.health < 200) {
+            if(!this.hcheck1) {
+                this.hcheck1 = true;
+                if(!this.teleporting) {
+                   this.resetKnockBack();
+                   this.teleport(); 
+                } 
+                this.atkSpeed = 800;
+            } 
+            
+        } 
+        if(this.health < 150) {
+            if(!this.hcheck2) {
+                this.hcheck2 = true;
+                if(!this.teleporting) {
+                    this.resetKnockBack();
+                    this.teleport();
+                } 
+                this.atkSpeed = 600;
+            } 
+            
+        }
 
         if(this.health < this.phasestart) {
                         this.phase2 = true;
@@ -1052,16 +1135,19 @@ function Boss(x,y) {
         if (this.health <= 0) {
           this.die(scene,2*16,3*16);
           scene.win = true;
+          setTimeout(scene.resetWin.bind(this), 5000);
+          setTimeout(this.resetKnockBack.bind(this), 200);
+          scene.DeleteBarriers();
+          scene.playMusic("music-savepoint");
         }
         
-        if(!this.knockBack) {
+        if(!this.knockBack && !this.teleporting) {
             if(this.active) {
                 if(this.phase2) {
                     if(this.atkframe == 0) scene.playSound("swingSound");
                     this.atkframe += 0.3;
                     this.facing++;
                     if(this.facing > 3) this.facing = 0;
-                    // Damage is now 20
                     if(this.atkframe > 3) {
                         this.atkframe = 0;
                         this.canAttack = true;
@@ -1123,7 +1209,12 @@ function Boss(x,y) {
                 
             }
         }
-        else {
+
+        else if(this.teleporting) {
+            this.teleport();
+        }
+
+        else if(this.knockBack) {
 
             this.prevX = this.transform.position.x;
             this.prevY = this.transform.position.y;
@@ -1134,6 +1225,8 @@ function Boss(x,y) {
                 if(!this.resetingKB) {
                     this.resetingKB = true;
                     setTimeout(this.resetKnockBack.bind(this), 200);
+                    if(!this.phase2) setTimeout(this.teleport.bind(this), 200);
+                    
                 }
             }
             this.transform.position.x = lerp2(this.transform.position.x, this.kbPos.x, 0.1);
@@ -1142,6 +1235,7 @@ function Boss(x,y) {
                 if(!this.resetingKB) {
                     this.resetingKB = true;
                     setTimeout(this.resetKnockBack.bind(this), 200);
+                    if(!this.phase2) setTimeout(this.teleport.bind(this), 200);
                 }
             }
 
@@ -1166,7 +1260,10 @@ function Boss(x,y) {
 
 
         ctx.fillStyle = "green";
-        if(this.knockBack) ctx.drawImage(this.imgRed, 9*16 + (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        if(this.teleporting) {
+            ctx.drawImage(this.imgWep, (Math.floor(this.frame)*16),4*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
+        }
+        else if(this.knockBack) ctx.drawImage(this.imgRed, 9*16 + (Math.floor(this.frame)*16),4*16 + this.facing*16, 16, 16, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor(this.transform.position.y - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 16);
         else if(this.phase2) {
             if (this.facing == 3) {
                 ctx.drawImage(this.imgWep, (Math.floor(2)*16), this.facing*16-16, 16, 32, Math.floor(this.transform.position.x - scene.Camera.transform.position.x + scene.Camera.offset.x),Math.floor((this.transform.position.y-16) - scene.Camera.transform.position.y + scene.Camera.offset.y), 16, 32);
@@ -1327,12 +1424,10 @@ function Swing(parent, dir,pos,damage, tSize, ignorePlayer) {
   this.onCollide = function(scene, collider) {
     if(this.parent instanceof Player) {
         if(collider.type == "Enemy") {
-            console.log("attacked Enemy");
             collider.onCollide(scene, this);
         }
     }
     else if(collider.type == "Player") {
-        console.log("hit player");
             collider.onCollide(scene, this);
         }
     
@@ -1771,6 +1866,7 @@ function TileRenderer() {
         scene.drawBossHealth = false;
 		scene.GameObjects.push(this); //Push this tile renderer back into the list
 		scene.GameObjects.push(scene.player); //Push player back into the list
+        scene.win = false;
 
 
 
@@ -1794,6 +1890,12 @@ function TileRenderer() {
         console.log("after map load");
 
 		this.map = mapData;
+
+        //For Joey
+        if(typeof this.map.layers == 'undefined') {
+            console.log("parsing JSON");
+            this.map = JSON.parse(mapData);
+        }
 
         this.img = document.getElementById("basicTiles");
 
@@ -1863,6 +1965,7 @@ function TileRenderer() {
                             scene.boss = new Boss(this.map.layers[i].objects[o].x,this.map.layers[i].objects[o].y);
                             scene.GameObjects.push(scene.boss);
                             scene.GameObjects[Scene.GameObjects.length-1].Start(scene);
+                            scene.barPos = scene.boss.health;
                         } else {
                         	var prop = new StaticProp(imgBuffer, this.map.layers[i].objects[o].x, this.map.layers[i].objects[o].y);
 
@@ -2028,11 +2131,48 @@ function Scene() {
 
     this.tileRenderer = new TileRenderer();
     this.player = new Player();
+    this.pBarPos = this.player.health;
     this.layers = 2; //includes 0
 
     this.drawBossHealth = false;
     this.barlength = 0;
+    this.barPos;
     this.win = false;
+
+    this.barriers = [];
+
+    this.cheat = false;
+
+    //Barriers for boss room
+    this.SpawnBarriers = function() {
+        var imgBuffer = document.getElementById("barrier");
+        this.barriers.push(new StaticProp(imgBuffer, 7*16, 13*16));
+        this.barriers.push(new StaticProp(imgBuffer, 7*16, 14*16));
+        this.barriers.push(new StaticProp(imgBuffer, 7*16, 15*16));
+        this.barriers.push(new StaticProp(imgBuffer, 7*16, 16*16));
+        this.barriers.push(new StaticProp(imgBuffer, 13*16, 29*16));
+        this.barriers.push(new StaticProp(imgBuffer, 14*16, 29*16));
+        this.barriers.push(new StaticProp(imgBuffer, 15*16, 29*16));
+        this.barriers.push(new StaticProp(imgBuffer, 16*16, 29*16));
+        this.barriers.push(new StaticProp(imgBuffer, 22*16, 13*16));
+        this.barriers.push(new StaticProp(imgBuffer, 22*16, 14*16));
+        this.barriers.push(new StaticProp(imgBuffer, 22*16, 15*16));
+        this.barriers.push(new StaticProp(imgBuffer, 22*16, 16*16));
+
+        for(var i = 0; i < this.barriers.length; i++) {
+            this.GameObjects.push(this.barriers[i]);
+        }
+    }
+
+    this.DeleteBarriers = function() {
+        for(var i = 0; i < this.barriers.length; i++) {
+            this.barriers[i].isDead = true;
+        }
+    }
+
+    this.resetWin = function() {
+        this.win = false;
+    }
 
 	this.loadMap = function(fileName) {
 
@@ -2057,7 +2197,18 @@ function Scene() {
             else if(this.player.health > 25) ctx.fillStyle = "#f4f442";
             else ctx.fillStyle = "#f44242";
             ctx.globalAlpha = 1.0;
-            ctx.fillRect(10,10,this.player.health,8);
+            if(this.pBarPos == this.player.health) {
+                ctx.fillRect(10,10,this.player.health,8);
+            }
+            else if(this.pBarPos > this.player.health) {
+                ctx.fillRect(10,10,this.pBarPos,8);
+                this.pBarPos -= 2;
+            }
+            else {
+                ctx.fillRect(10,10,this.pBarPos,8);
+                this.pBarPos += 2;
+            }
+            
         }
         else {
             ctx.globalAlpha = 1.0;
@@ -2088,7 +2239,13 @@ function Scene() {
                     ctx.fillRect(34,219,100*2.5+2,11);
                     ctx.globalAlpha = 1.0;
                     ctx.fillStyle = "red";
-                    ctx.fillRect(35,220,this.boss.health/3*2.5,9);
+                    if(this.barPos == this.boss.health) {
+                        ctx.fillRect(35,220,this.boss.health/3*2.5,9);
+                    }  
+                    else {
+                        ctx.fillRect(35,220,this.barPos/3*2.5,9);
+                        this.barPos -= 2;
+                    }
 
                 }
             }
@@ -2154,6 +2311,19 @@ function Scene() {
 
         this.deltaTime = new Date() - startTime;
         startTime = new Date();
+
+        if(input.arrowKeyLeft && input.arrowKeyRight) {
+            if(!this.cheat) {
+                this.cheat = true;
+                this.loadMap("davies-1");
+                this.player.transform.position.x = 14*16;
+                this.player.transform.position.y = 27*16;
+            }
+        }
+
+        if(!input.arrowKeyLeft && !input.arrowKeyRight && this.cheat) {
+            this.cheat = false;
+        }
     }
 
     this.Draw = function() {

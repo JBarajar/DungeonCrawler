@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="60" tilewidth="16" tileheight="16" nextobjectid="4">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="60" tilewidth="16" tileheight="16" nextobjectid="12">
  <tileset firstgid="1" name="basictiles" tilewidth="16" tileheight="16" tilecount="512" columns="8">
   <image source="../img/basictiles.png" width="128" height="1024"/>
   <tile id="14">
@@ -226,8 +226,16 @@
 scene.loadMap(&quot;davies-1&quot;);</property>
    </properties>
   </object>
-  <object id="2" name="Slime" type="Slime" gid="520" x="668" y="701" width="16" height="16"/>
-  <object id="3" name="Skeleton" type="Skeleton" gid="519" x="581" y="698" width="16" height="16"/>
+  <object id="2" name="Slime" type="Slime" gid="520" x="600" y="686" width="16" height="16"/>
+  <object id="3" name="Skeleton" type="Skeleton" gid="519" x="535" y="384" width="16" height="16"/>
+  <object id="4" name="Skeleton" type="Skeleton" gid="519" x="730" y="383" width="16" height="16"/>
+  <object id="5" name="Slime" type="Slime" gid="520" x="658" y="753" width="16" height="16"/>
+  <object id="6" name="Skeleton" type="Skeleton" gid="519" x="197" y="759" width="16" height="16"/>
+  <object id="7" name="Slime" type="Slime" gid="520" x="448" y="180" width="16" height="16"/>
+  <object id="8" name="Skeleton" type="Skeleton" gid="519" x="59" y="436" width="16" height="16"/>
+  <object id="9" name="Slime" type="Slime" gid="520" x="216" y="590" width="16" height="16"/>
+  <object id="10" name="Skeleton" type="Skeleton" gid="519" x="165" y="103" width="16" height="16"/>
+  <object id="11" name="Skeleton" type="Skeleton" gid="519" x="158" y="292" width="16" height="16"/>
  </objectgroup>
  <layer name="Float layer" width="50" height="60">
   <properties>
