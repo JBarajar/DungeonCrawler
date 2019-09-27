@@ -1,4 +1,4 @@
-# DungeonCrawler
+# Dungeon Crawler
 
 <a href='https://jbarajar.github.io/DungeonCrawler/'> <h2>Play Here</h2></a>
 
@@ -6,3 +6,6 @@
 
 2D Zelda-style dungeon crawler game built using Javascript and Canvas.
 
+<h4>Controls:</h4>
+<p>Move: WSAD<br/>
+Attack: Spacebar</p>
