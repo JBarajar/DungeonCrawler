@@ -1,0 +1,22 @@
+{
+  "name": "dungeoncrawler",
+  "version": "1.0.0",
+  "description": "<a href='https://jbarajar.github.io/DungeonCrawler/'> <h2>Play Here</h2></a>",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snyderr1/DungeonCrawler.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/snyderr1/DungeonCrawler/issues"
+  },
+  "homepage": "https://github.com/snyderr1/DungeonCrawler#readme",
+  "devDependencies": {
+    "jest": "^25.1.0"
+  }
+}
